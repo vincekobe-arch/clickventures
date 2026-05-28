@@ -136,7 +136,7 @@ const css = `
     /* Header */
     .ud-header-inner { padding-left: 16px !important; padding-right: 16px !important; }
     .ud-list-wrap { padding-left: 16px !important; padding-right: 16px !important; padding-top: 16px !important; }
-    .ud-stats-row { gap: 16px !important; }
+    .ud-stats-row { display: none !important; }
     .ud-location-tag { display: none !important; }
 
     
@@ -211,8 +211,18 @@ export default function UserDashboard() {
 
   const closeModal = () => {
     setModalClosing(true);
+    document.body.style.overflow = '';
     setTimeout(() => { setModal(null); setModalClosing(false); }, 600);
   };
+
+  React.useEffect(() => {
+    if (modal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [modal]);
 
   if (!user || user.role !== 'user') {
     navigate('/login'); return null;
