@@ -139,17 +139,7 @@ const css = `
     .ud-stats-row { gap: 16px !important; }
     .ud-location-tag { display: none !important; }
 
-    /* Floating header on mobile */
-    .ud-sticky-header {
-      position: sticky !important;
-      top: 0 !important;
-      z-index: 50 !important;
-      backdrop-filter: blur(16px) !important;
-      -webkit-backdrop-filter: blur(16px) !important;
-      background: rgba(17,17,17,0.92) !important;
-      border-bottom: 1px solid rgba(255,255,255,0.07) !important;
-      padding: 20px 0 18px !important;
-    }
+    
 
     /* Modal — centered with sticky image header */
     .ud-modal-overlay {
@@ -254,7 +244,7 @@ export default function UserDashboard() {
       </svg>
 
       {/* ── HEADER ── */}
-      <div className="ud-sticky-header relative z-10 border-b" style={{ background: 'rgba(17,17,17,0.97)', borderColor: 'rgba(255,255,255,0.07)', padding: '48px 0 44px' }}>
+      <div className="relative z-10 border-b" style={{ background: 'rgba(17,17,17,0.97)', borderColor: 'rgba(255,255,255,0.07)', padding: '48px 0 44px' }}>
         <div className="ud-header-inner mx-auto px-10" style={{ maxWidth: '1200px' }}>
 
           {/* Brand */}
