@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head><title>Authenticating...</title></head>
+<body>
+<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+<script>
+  async function handleAuth() {
+    const msalInstance = new msal.PublicClientApplication({
+      auth: {
+        clientId: '8b151c4c-b5e8-4332-8bde-a4fc750734a2',
+        authority: 'https://login.microsoftonline.com/common',
+        redirectUri: 'http://localhost:3000/auth-redirect.html',
+      },
+      cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: true }
+    });
+    await msalInstance.initialize();
+    try {
+      await msalInstance.handleRedirectPromise();
+    } catch(e) {}
+    window.close();
+  }
+  handleAuth();
+</script>
+</body>
+</html>
