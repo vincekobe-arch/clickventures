@@ -1514,10 +1514,10 @@ function MemberCard({ m, baseUrl, userId, spotSlug, onReload, onViewDetail }) {
       {/* Edit modal */}
       {editing && editModalOpen && ReactDOM.createPortal(
   <div onClick={() => { setEditing(false); setEditModalOpen(false); setEditPhoto(null); setPreview(null); }}
-  className="fixed inset-0 flex items-end justify-center"
-  style={{ background:'rgba(0,0,0,0.55)', backdropFilter:'blur(8px)', animation:'fadeIn 0.2s ease forwards', zIndex:9999 }}>
+  className="fixed inset-0 flex items-center justify-center"
+  style={{ background:'rgba(0,0,0,0.55)', backdropFilter:'blur(8px)', animation:'fadeIn 0.2s ease forwards', zIndex:9999, padding:'24px' }}>
     <div onClick={e => e.stopPropagation()} className="bg-white w-full flex flex-col overflow-hidden"
-      style={{ borderRadius:'16px 16px 0 0', maxHeight:'88vh', boxShadow:'0 -8px 40px rgba(0,0,0,0.18)', animation:'fadeUp 0.3s ease forwards' }}>
+      style={{ borderRadius:16, maxWidth:520, maxHeight:'88vh', boxShadow:'0 24px 80px rgba(0,0,0,0.18)', animation:'modalIn 0.28s cubic-bezier(0.34,1.56,0.64,1) forwards' }}>
 
             <div className="flex items-center justify-between flex-shrink-0 px-6 py-4" style={{ borderBottom:'1px solid rgba(0,0,0,0.07)' }}>
               <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:'1rem', color:'#111' }}>Edit Member</div>
@@ -1699,10 +1699,10 @@ function AuthorsPanel({ members, userId, spotSlug, baseUrl, onReload }) {
 
       {/* Add Member Modal */}
       {adding && ReactDOM.createPortal(
-  <div onClick={() => { setAdding(false); resetForm(); }} className="fixed inset-0 flex items-end justify-center"
-  style={{ background:'rgba(0,0,0,0.55)', backdropFilter:'blur(8px)', animation:'fadeIn 0.2s ease forwards', zIndex:9999 }}>
-    <div onClick={e => e.stopPropagation()} className="bg-white w-full flex flex-col"
-      style={{ borderRadius:'16px 16px 0 0', maxHeight:'88vh', boxShadow:'0 -8px 40px rgba(0,0,0,0.18)', animation:'fadeUp 0.3s ease forwards' }}>
+  <div onClick={() => { setAdding(false); resetForm(); }} className="fixed inset-0 flex items-center justify-center"
+  style={{ background:'rgba(0,0,0,0.55)', backdropFilter:'blur(8px)', animation:'fadeIn 0.2s ease forwards', zIndex:9999, padding:'24px' }}>
+  <div onClick={e => e.stopPropagation()} className="bg-white w-full flex flex-col"
+    style={{ borderRadius:16, maxWidth:520, maxHeight:'88vh', boxShadow:'0 24px 80px rgba(0,0,0,0.18)', animation:'modalIn 0.28s cubic-bezier(0.34,1.56,0.64,1) forwards' }}>
 
             <div className="flex items-center justify-between flex-shrink-0 px-6 py-4" style={{ borderBottom:'1px solid rgba(0,0,0,0.07)' }}>
               <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:'1rem', color:'#111' }}>New Member</div>
