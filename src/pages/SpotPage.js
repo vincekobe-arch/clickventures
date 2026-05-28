@@ -1434,6 +1434,20 @@ export default function SpotPage() {
   const currentUserId = currentUser?.id ?? null;
 
   useEffect(() => {
+    if (lightbox) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [lightbox]);
+
+  useEffect(() => {
     setLoading(true);
     Promise.all([API.get(`/media.php?slug=${slug}`), API.get(`/albums.php?slug=${slug}`)]).then(([mediaRes, albumsRes]) => {
       const mediaItems = mediaRes.data.map(m => ({ ...m, _type: 'media' }));
@@ -1621,8 +1635,14 @@ export default function SpotPage() {
           <div className="sp-lightbox-overlay" onClick={() => setLightbox(null)}
             tabIndex={0} ref={el => el?.focus()}
             onKeyDown={e => { if (e.key === 'ArrowLeft') { e.stopPropagation(); setIdx(ci - 1); } if (e.key === 'ArrowRight') { e.stopPropagation(); setIdx(ci + 1); } }}
+            onTouchMove={e => e.preventDefault()}
           >
-            <img src={curSrc} alt={curCap} className="sp-lightbox-img" onClick={e => e.stopPropagation()}/>
+            <img src={curSrc} alt={curCap} className="sp-lightbox-img"
+              onClick={e => e.stopPropagation()}
+              onTouchStart={e => e.stopPropagation()}
+              onTouchMove={e => { e.stopPropagation(); e.preventDefault(); }}
+              onTouchEnd={e => e.stopPropagation()}
+            />
             {curCap && (
               <div className="mt-4 text-center" style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.84rem', maxWidth: 520, lineHeight: 1.6 }}>{curCap}</div>
             )}
