@@ -751,7 +751,7 @@ function AlbumGrid({ media, baseUrl, onImageClick }) {
 
   function handleImageClick(item, idx) {
     if (movedRef.current) return; // swipe, not tap
-    onImageClick({ src: baseUrl + item.file_path, caption: item.caption, all: media, currentIdx: idx });
+    onImageClick({ src: mediaUrl(item.file_path), caption: item.caption, all: media, currentIdx: idx });
   }
 
   // Desktop: original grid layout
@@ -819,7 +819,7 @@ function AlbumGrid({ media, baseUrl, onImageClick }) {
             <div key={item.id} style={{ width: `${100 / media.length}%`, height: '100%', flexShrink: 0, position: 'relative' }}>
               {item.file_type === 'image' && (
                 <img
-                  src={baseUrl + item.file_path}
+                  src={mediaUrl(item.file_path)}
                   alt={item.caption}
                   onClick={() => handleImageClick(item, idx)}
                   style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', cursor: 'zoom-in', pointerEvents: 'auto' }}
