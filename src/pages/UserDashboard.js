@@ -112,7 +112,7 @@ const css = `
 function SpotStars({ slug }) {
   const [data, setData] = React.useState(null);
   React.useEffect(() => {
-    fetch(`http://localhost/clickventures-api/ratings.php?slug=${slug}&user_id=0`)
+    fetch(`https://clickventures-api.onrender.com/ratings.php?slug=${slug}&user_id=0`)
       .then(r => r.json()).then(d => setData(d.summary || null)).catch(() => {});
   }, [slug]);
 
