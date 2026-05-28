@@ -151,7 +151,7 @@ const css = `
       padding: 20px 0 18px !important;
     }
 
-    /* Modal — centered with scroll */
+    /* Modal — centered with sticky image header */
     .ud-modal-overlay {
       align-items: center !important;
       padding: 20px 16px !important;
@@ -160,11 +160,19 @@ const css = `
       border-radius: 18px !important;
       max-width: 100% !important;
       max-height: 82vh !important;
-      overflow-y: auto !important;
+      overflow: hidden !important;
+      display: flex !important;
+      flex-direction: column !important;
       animation: slideUp 0.5s cubic-bezier(0.25,1.1,0.5,1) forwards !important;
     }
     .ud-modal-box.closing {
       animation: slideDown 0.4s ease forwards !important;
+    }
+    .ud-modal-box > div:first-child {
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 10 !important;
+      flex-shrink: 0 !important;
     }
   }
 `;
@@ -352,10 +360,10 @@ export default function UserDashboard() {
       {/* ── SPOT MODAL ── */}
       {modal && (
         <div className={`ud-modal-overlay${modalClosing ? ' closing' : ''}`} onClick={closeModal}>
-          <div className={`ud-modal-box${modalClosing ? ' closing' : ''}`} onClick={e => e.stopPropagation()}>
+          <div className={`ud-modal-box${modalClosing ? ' closing' : ''}`} onClick={e => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column' }}>
 
             {/* Modal header image */}
-            <div className="relative overflow-hidden" style={{ height: '220px' }}>
+            <div className="relative overflow-hidden" style={{ height: '220px', flexShrink: 0 }}>
               <img src={modal.img} alt={modal.name} className="w-full h-full object-cover block" />
               <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.6) 100%)' }} />
 
@@ -379,7 +387,7 @@ export default function UserDashboard() {
             </div>
 
             {/* Modal body */}
-            <div className="px-6 pt-5 pb-6">
+            <div className="px-6 pt-5 pb-6" style={{ overflowY: 'auto', flex: 1 }}>
               <p className="mb-2" style={{ fontSize: '0.88rem', color: 'rgba(0,0,0,0.6)', lineHeight: 1.8 }}>
                 {modal.desc}
               </p>
