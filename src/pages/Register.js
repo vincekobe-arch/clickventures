@@ -89,6 +89,7 @@ export default function Register() {
   const [account, setAccount] = useState({ username: '', password: '', confirm: '' });
   const [msg, setMsg] = useState('');
   const [ok, setOk] = useState(false);
+  const [loading, setLoading] = useState(false);
   const nav = useNavigate();
 
   const passwordMatch = account.confirm.length > 0 && account.password === account.confirm;
@@ -107,7 +108,9 @@ export default function Register() {
   const strength = getStrength(account.password);
 
   const submit = async () => {
+    if (loading) return;
     setMsg('');
+    setLoading(true);
     if (!personal.firstName || !personal.lastName || !personal.gender || !personal.birthday)
       return setMsg('Please fill in all required personal information.');
     if (!account.username || !account.password || !account.confirm)
@@ -140,6 +143,8 @@ export default function Register() {
       }
     } catch {
       setMsg('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -449,10 +454,11 @@ export default function Register() {
             <div className="mt-7" style={anim(0.5)}>
               <button
                 onClick={submit}
+                disabled={loading}
                 className="reg-btn w-full text-white font-black uppercase tracking-wider rounded-lg py-3.5 border-none cursor-pointer"
-                style={{ background: '#111', fontSize: '0.76rem', letterSpacing: '0.12em' }}
+                style={{ background: loading ? '#555' : '#111', fontSize: '0.76rem', letterSpacing: '0.12em', opacity: loading ? 0.7 : 1 }}
               >
-                Create Account
+                {loading ? 'Creating Account…' : 'Create Account'}
               </button>
             </div>
 

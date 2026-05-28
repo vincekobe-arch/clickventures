@@ -30,6 +30,15 @@ const css = `
     40% { transform: perspective(900px) rotateY(-8deg) scale(1.02); }
     100% { opacity:0; transform: perspective(900px) rotateY(90deg) scale(0.85); }
   }
+  @keyframes slideUp {
+    0% { opacity:0; transform: translateY(60px) scale(0.97); }
+    60% { transform: translateY(-6px) scale(1.01); }
+    100% { opacity:1; transform: translateY(0) scale(1); }
+  }
+  @keyframes slideDown {
+    0% { opacity:1; transform: translateY(0) scale(1); }
+    100% { opacity:0; transform: translateY(60px) scale(0.97); }
+  }
   @keyframes overlayFadeIn { from{opacity:0} to{opacity:1} }
   @keyframes overlayFadeOut { from{opacity:1} to{opacity:0} }
 
@@ -73,8 +82,18 @@ const css = `
     width: 100%; max-width: 560px; cursor: default;
     animation: flipIn 1.2s cubic-bezier(0.25,1.1,0.5,1) forwards;
     box-shadow: 0 32px 80px rgba(0,0,0,0.25);
+    max-height: 90vh; overflow-y: auto;
   }
   .ud-modal-box.closing { animation: flipOut 0.55s cubic-bezier(0.25,1.1,0.5,1) forwards; }
+
+  @media (max-width: 640px) {
+    .ud-modal-overlay { align-items: flex-end; padding: 0; }
+    .ud-modal-box {
+      border-radius: 20px 20px 0 0; max-width: 100%; max-height: 85vh;
+      animation: slideUp 0.5s cubic-bezier(0.25,1.1,0.5,1) forwards;
+    }
+    .ud-modal-box.closing { animation: slideDown 0.4s ease forwards; }
+  }
 
   .ud-modal-close {
     background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.3);
