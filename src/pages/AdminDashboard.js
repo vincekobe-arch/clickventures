@@ -2,7 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import API from '../services/api';
 
-const BASE = 'http://localhost/clickventures-api/';
+const BASE = '';
+
+function mediaUrl(filePath) {
+  if (!filePath) return '';
+  if (filePath.startsWith('http://') || filePath.startsWith('https://')) return filePath;
+  return BASE + filePath;
+}
 
 const spotNames = {
   'ili-likha':            'Ili-Likha Village',
@@ -846,7 +852,7 @@ function AlbumGrid({ media, baseUrl, onImageClick }) {
   }
   function handleImageClick(item, idx) {
     if (movedRef.current) return;
-    onImageClick({ src: baseUrl + item.file_path, caption: item.caption, all: media, currentIdx: idx });
+    onImageClick({ src: mediaUrl(item.file_path), caption: item.caption, all: media, currentIdx: idx });
   }
 
   if (!isMobile) {
@@ -859,8 +865,8 @@ function AlbumGrid({ media, baseUrl, onImageClick }) {
             return (
               <div key={m.id} className="relative overflow-hidden" style={{ paddingBottom: media.length === 1 ? '52%' : '100%', background: '#f0f0ee' }}>
                 {m.file_type === 'image' && (
-                  <img src={baseUrl + m.file_path} alt={m.caption}
-                    onClick={() => !showOverlay && onImageClick({ src: baseUrl + m.file_path, caption: m.caption, all: media, currentIdx: idx })}
+                  <img src={mediaUrl(m.file_path)} alt={m.caption}
+                    onClick={() => !showOverlay && onImageClick({ src: mediaUrl(m.file_path), caption: m.caption, all: media, currentIdx: idx })}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-300"
                     style={{ cursor: showOverlay ? 'default' : 'zoom-in' }}
                     onMouseEnter={e => { if (!showOverlay) e.currentTarget.style.transform='scale(1.04)'; }}
@@ -876,7 +882,7 @@ function AlbumGrid({ media, baseUrl, onImageClick }) {
                 )}
                 {showOverlay && (
                   <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.52)', cursor: 'pointer' }}
-                    onClick={() => onImageClick({ src: baseUrl + m.file_path, caption: m.caption, all: media, currentIdx: 2 })}>
+                    onClick={() => onImageClick({ src: mediaUrl(m.file_path), caption: m.caption, all: media, currentIdx: 2 })}>
                     <span className="text-white font-bold" style={{ fontSize: '1.4rem' }}>+{extra}</span>
                   </div>
                 )}
@@ -910,7 +916,7 @@ function AlbumGrid({ media, baseUrl, onImageClick }) {
           {media.map((item, idx) => (
             <div key={item.id} style={{ width: `${100 / media.length}%`, height: '100%', flexShrink: 0, position: 'relative' }}>
               {item.file_type === 'image' && (
-                <img src={baseUrl + item.file_path} alt={item.caption}
+                <img src={mediaUrl(item.file_path)} alt={item.caption}
                   onClick={() => handleImageClick(item, idx)}
                   style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', cursor: 'zoom-in', pointerEvents: 'auto' }}
                   draggable={false}
@@ -1166,9 +1172,9 @@ function AdminFeedPost({ post, baseUrl, onImageClick, animDelay, currentUserId, 
 
       {/* Single image */}
       {!isAlbum && post.file_type === 'image' && (
-        <div onClick={() => onImageClick({ src: baseUrl + post.file_path, caption: post.caption })}
+        <div onClick={() => onImageClick({ src: mediaUrl(post.file_path), caption: post.caption })}
           className="overflow-hidden cursor-zoom-in" style={{ maxHeight:460, background:'#f0f0ee' }}>
-          <img src={baseUrl + post.file_path} alt={post.caption}
+          <img src={mediaUrl(post.file_path)} alt={post.caption}
             className="w-full block object-cover transition-transform duration-300"
             onMouseEnter={e => e.currentTarget.style.transform='scale(1.02)'}
             onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}
@@ -1179,14 +1185,14 @@ function AdminFeedPost({ post, baseUrl, onImageClick, animDelay, currentUserId, 
       {/* Video */}
       {!isAlbum && post.file_type === 'video' && (
         <div className="bg-black">
-          <video src={baseUrl + post.file_path} controls className="w-full block" style={{ maxHeight:420 }}/>
+          <video src={mediaUrl(post.file_path)} controls className="w-full block" style={{ maxHeight:420 }}/>
         </div>
       )}
 
       {/* Document */}
       {!isAlbum && post.file_type === 'document' && (
         <div className="px-4 pb-3">
-          <a href={baseUrl + post.file_path} target="_blank" rel="noreferrer"
+          <a href={mediaUrl(post.file_path)} target="_blank" rel="noreferrer"
             className="flex items-center gap-3 no-underline transition-colors duration-150"
             style={{ padding:'11px 14px', background:'#f5f5f3', borderRadius:10, border:'1px solid rgba(0,0,0,0.07)' }}
             onMouseEnter={e => e.currentTarget.style.background='#eceae8'}
@@ -1417,7 +1423,7 @@ function MemberCard({ m, baseUrl, userId, spotSlug, onReload, onViewDetail }) {
     } finally { setDeleting(false); setConfirm(false); }
   }
 
-  const photoSrc = preview || (m.photo_path ? baseUrl + m.photo_path : null);
+  const photoSrc = preview || (m.photo_path ? mediaUrl(m.photo_path) : null);
 
   return (
     <div className="bg-white overflow-hidden" style={{ border:'1px solid rgba(0,0,0,0.08)', borderRadius:14, boxShadow:'0 2px 10px rgba(0,0,0,0.04)', animation:'fadeUp 0.4s ease forwards', opacity:0 }}>
@@ -1532,7 +1538,7 @@ function MemberCard({ m, baseUrl, userId, spotSlug, onReload, onViewDetail }) {
                     <div onClick={() => document.getElementById(`edit-photo-input-${m.id}`).click()}
                       className="relative overflow-hidden cursor-pointer flex-shrink-0"
                       style={{ width:160, height:160, borderRadius:10, border:'1.5px solid rgba(0,0,0,0.15)' }}>
-                      <img src={baseUrl + m.photo_path} alt={m.name} className="w-full h-full object-cover block transition-transform duration-300" />
+                      <img src={mediaUrl(m.photo_path)} alt={m.name} className="w-full h-full object-cover block transition-transform duration-300" />
                       <div className="absolute inset-0 flex items-center justify-center transition-all duration-200"
                         style={{ background:'rgba(0,0,0,0)' }}
                         onMouseEnter={e => { e.currentTarget.style.background='rgba(0,0,0,0.45)'; e.currentTarget.querySelector('span').style.opacity=1; }}
@@ -1802,7 +1808,7 @@ function AuthorsPanel({ members, userId, spotSlug, baseUrl, onReload }) {
                     onMouseEnter={e => { e.currentTarget.querySelector('.zoom-overlay').style.background='rgba(0,0,0,0.35)'; e.currentTarget.querySelector('.zoom-label').style.opacity='1'; e.currentTarget.querySelector('img').style.transform='scale(1.05)'; }}
                     onMouseLeave={e => { e.currentTarget.querySelector('.zoom-overlay').style.background='rgba(0,0,0,0)'; e.currentTarget.querySelector('.zoom-label').style.opacity='0'; e.currentTarget.querySelector('img').style.transform='scale(1)'; }}
                   >
-                    <img src={detailBase + detailMember.photo_path} alt={detailMember.name} className="w-full h-full object-cover block transition-transform duration-300" />
+                    <img src={mediaUrl(detailMember.photo_path)} alt={detailMember.name} className="w-full h-full object-cover block transition-transform duration-300" />
                     <div className="zoom-overlay absolute inset-0 pointer-events-none transition-all duration-200" style={{ background:'rgba(0,0,0,0)' }} />
                     <span className="zoom-label absolute pointer-events-none transition-opacity duration-200" style={{ bottom:6, right:8, fontSize:'0.55rem', fontWeight:700, color:'rgba(255,255,255,0.9)', letterSpacing:'0.08em', textShadow:'0 1px 4px rgba(0,0,0,0.6)', opacity:0 }}>CLICK TO ZOOM</span>
                   </div>
@@ -1857,7 +1863,7 @@ function AuthorsPanel({ members, userId, spotSlug, baseUrl, onReload }) {
       {detailImgZoom && detailMember?.photo_path && ReactDOM.createPortal(
         <div onClick={() => setDetailImgZoom(false)} className="fixed inset-0 flex items-center justify-center cursor-zoom-out"
           style={{ background:'rgba(0,0,0,0.95)', zIndex:1100, backdropFilter:'blur(16px)', animation:'fadeIn 0.2s ease forwards' }}>
-          <img src={detailBase + detailMember.photo_path} alt={detailMember.name}
+          <img src={mediaUrl(detailMember.photo_path)} alt={detailMember.name}
             className="w-full h-full object-contain" style={{ animation:'modalIn 0.28s cubic-bezier(0.34,1.56,0.64,1) forwards' }}
             onClick={e => e.stopPropagation()}
           />
@@ -2039,7 +2045,7 @@ const [activeTab, setActiveTab] = useState('posts');
   };
 
   const openModal = (m) => {
-    setModal({ src: BASE + m.file_path, caption: m.caption, type: m.file_type, fileName: m.file_name });
+    setModal({ src: mediaUrl(m.file_path), caption: m.caption, type: m.file_type, fileName: m.file_name });
     setFullscreen(false);
   };
 
@@ -2305,7 +2311,7 @@ const [activeTab, setActiveTab] = useState('posts');
             : [{ file_path: null, src: lightbox.src, caption: lightbox.caption }];
           const ci = lightbox.currentIdx ?? 0;
           const cur = all[ci];
-          const curSrc = cur?.file_path ? BASE + cur.file_path : (cur?.src || lightbox.src);
+          const curSrc = cur?.file_path ? mediaUrl(cur.file_path) : (cur?.src || lightbox.src);
           const curCap = cur?.caption || '';
           const setIdx = (i) => setLightbox({ ...lightbox, currentIdx: (i + all.length) % all.length });
 
@@ -2381,7 +2387,7 @@ const [activeTab, setActiveTab] = useState('posts');
                       <div key={m.id} className="media-thumb" onClick={() => { setFolderModal(null); openModal(m); }}>
                         {m.file_type === 'image' && (
                           <div className="overflow-hidden" style={{ height:100, borderRadius:'8px 8px 0 0' }}>
-                            <img src={BASE + m.file_path} alt={m.caption}
+                            <img src={mediaUrl(m.file_path)} alt={m.caption}
                               className="w-full h-full object-cover block transition-transform duration-300"
                               onMouseEnter={e => e.currentTarget.style.transform='scale(1.06)'}
                               onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}
