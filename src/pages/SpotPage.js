@@ -3,7 +3,13 @@ import ReactDOM from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import API from '../services/api';
 
-const BASE = 'http://localhost/clickventures-api/';
+const BASE = '';
+
+function mediaUrl(filePath) {
+  if (!filePath) return '';
+  if (filePath.startsWith('http://') || filePath.startsWith('https://')) return filePath;
+  return filePath;
+}
 
 const nameMap = {
   'ili-likha':           'Ili-Likha Village',
@@ -759,8 +765,8 @@ function AlbumGrid({ media, baseUrl, onImageClick }) {
             return (
               <div key={m.id} className="relative overflow-hidden" style={{ paddingBottom: media.length === 1 ? '52%' : '100%', background: '#f0f0ee' }}>
                 {m.file_type === 'image' && (
-                  <img src={baseUrl + m.file_path} alt={m.caption}
-                    onClick={() => !showOverlay && onImageClick({ src: baseUrl + m.file_path, caption: m.caption, all: media, currentIdx: idx })}
+                  <img src={mediaUrl(m.file_path)} alt={m.caption}
+                    onClick={() => !showOverlay && onImageClick({ src: mediaUrl(m.file_path), caption: m.caption, all: media, currentIdx: idx })}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-300"
                     style={{ cursor: showOverlay ? 'default' : 'zoom-in' }}
                     onMouseEnter={e => { if (!showOverlay) e.currentTarget.style.transform='scale(1.04)'; }}
@@ -776,7 +782,7 @@ function AlbumGrid({ media, baseUrl, onImageClick }) {
                 )}
                 {showOverlay && (
                   <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.52)', cursor:'pointer' }}
-                    onClick={() => onImageClick({ src: baseUrl + m.file_path, caption: m.caption, all: media, currentIdx: 2 })}>
+                    onClick={() => onImageClick({ src: mediaUrl(m.file_path), caption: m.caption, all: media, currentIdx: 2 })}>
                     <span className="text-white font-bold" style={{ fontSize: '1.4rem' }}>+{extra}</span>
                   </div>
                 )}
@@ -900,9 +906,9 @@ function FeedPost({ post, baseUrl, currentUserId, onImageClick, onViewAll, animD
 
       {/* Single image */}
       {!isAlbum && post.file_type === 'image' && (
-        <div onClick={() => onImageClick({ src: baseUrl + post.file_path, caption: post.caption })}
+        <div onClick={() => onImageClick({ src: mediaUrl(post.file_path), caption: post.caption })}
           className="overflow-hidden cursor-zoom-in" style={{ maxHeight: 460, background: '#f0f0ee' }}>
-          <img src={baseUrl + post.file_path} alt={post.caption}
+          <img src={mediaUrl(post.file_path)} alt={post.caption}
             className="w-full block object-cover transition-transform duration-300"
             onMouseEnter={e => e.currentTarget.style.transform='scale(1.02)'}
             onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}
@@ -913,14 +919,14 @@ function FeedPost({ post, baseUrl, currentUserId, onImageClick, onViewAll, animD
       {/* Video */}
       {!isAlbum && post.file_type === 'video' && (
         <div className="bg-black">
-          <video src={baseUrl + post.file_path} controls className="w-full block" style={{ maxHeight: 420 }}/>
+          <video src={mediaUrl(post.file_path)} controls className="w-full block" style={{ maxHeight: 420 }}/>
         </div>
       )}
 
       {/* Document */}
       {!isAlbum && post.file_type === 'document' && (
         <div className="px-4 pb-3">
-          <a href={baseUrl + post.file_path} target="_blank" rel="noreferrer"
+          <a href={mediaUrl(post.file_path)} target="_blank" rel="noreferrer"
             className="flex items-center gap-3 no-underline transition-colors duration-150"
             style={{ padding: '11px 14px', background: '#f5f5f3', borderRadius: 10, border: '1px solid rgba(0,0,0,0.07)' }}
             onMouseEnter={e => e.currentTarget.style.background='#eceae8'}
@@ -954,7 +960,7 @@ function FeedPost({ post, baseUrl, currentUserId, onImageClick, onViewAll, animD
 function ViewerMemberCard({ m, baseUrl }) {
   const [detailOpen, setDetailOpen] = useState(false);
   const [imgZoom,    setImgZoom]    = useState(false);
-  const photoSrc = m.photo_path ? baseUrl + m.photo_path : null;
+  const photoSrc = m.photo_path ? mediaUrl(m.photo_path) : null;
 
   return (
     <>
