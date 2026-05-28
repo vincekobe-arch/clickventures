@@ -41,6 +41,15 @@ const css = `
   }
   @keyframes overlayFadeIn { from{opacity:0} to{opacity:1} }
   @keyframes overlayFadeOut { from{opacity:1} to{opacity:0} }
+  @keyframes slideUp {
+    0% { opacity:0; transform: translateY(40px) scale(0.97); }
+    60% { transform: translateY(-4px) scale(1.01); }
+    100% { opacity:1; transform: translateY(0) scale(1); }
+  }
+  @keyframes slideDown {
+    0% { opacity:1; transform: translateY(0) scale(1); }
+    100% { opacity:0; transform: translateY(40px) scale(0.97); }
+  }
 
   .ud-spot-row {
     display: flex; align-items: center;
@@ -117,15 +126,46 @@ const css = `
   ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 2px; }
 
   @media (max-width: 640px) {
+    /* Spot row — stack image on top */
     .ud-spot-row { flex-wrap: wrap; }
-    .ud-img-wrap { width: 100% !important; height: 160px !important; }
+    .ud-img-wrap { width: 100% !important; height: 140px !important; }
     .ud-spot-row > div:nth-child(2) { display: none; }
-    .ud-spot-row .ud-content-wrap { padding: 12px 14px 4px !important; }
-    .ud-spot-row > div:last-child { width: 100%; padding: 4px 14px 14px !important; }
-    .ud-header-inner { padding-left: 20px !important; padding-right: 20px !important; }
-    .ud-list-wrap { padding-left: 20px !important; padding-right: 20px !important; }
-    .ud-stats-row { gap: 20px !important; }
+    .ud-spot-row .ud-content-wrap { padding: 10px 14px 2px !important; }
+    .ud-spot-row > div:last-child { width: 100%; padding: 2px 14px 12px !important; }
+
+    /* Header */
+    .ud-header-inner { padding-left: 16px !important; padding-right: 16px !important; }
+    .ud-list-wrap { padding-left: 16px !important; padding-right: 16px !important; padding-top: 16px !important; }
+    .ud-stats-row { gap: 16px !important; }
     .ud-location-tag { display: none !important; }
+
+    /* Floating header on mobile */
+    .ud-sticky-header {
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 50 !important;
+      backdrop-filter: blur(16px) !important;
+      -webkit-backdrop-filter: blur(16px) !important;
+      background: rgba(17,17,17,0.92) !important;
+      border-bottom: 1px solid rgba(255,255,255,0.07) !important;
+      padding: 20px 0 18px !important;
+    }
+
+    /* Modal — centered with scroll */
+    .ud-modal-overlay {
+      align-items: center !important;
+      padding: 20px 16px !important;
+    }
+    .ud-modal-box {
+      border-radius: 18px !important;
+      max-width: 100% !important;
+      max-height: 82vh !important;
+      overflow-y: auto !important;
+      animation: slideUp 0.5s cubic-bezier(0.25,1.1,0.5,1) forwards !important;
+    }
+    .ud-modal-box.closing {
+      animation: slideDown 0.4s ease forwards !important;
+    }
   }
 `;
 function SpotStars({ slug }) {
@@ -206,7 +246,7 @@ export default function UserDashboard() {
       </svg>
 
       {/* ── HEADER ── */}
-      <div className="relative z-10 border-b" style={{ background: 'rgba(17,17,17,0.97)', borderColor: 'rgba(255,255,255,0.07)', padding: '48px 0 44px' }}>
+      <div className="ud-sticky-header relative z-10 border-b" style={{ background: 'rgba(17,17,17,0.97)', borderColor: 'rgba(255,255,255,0.07)', padding: '48px 0 44px' }}>
         <div className="ud-header-inner mx-auto px-10" style={{ maxWidth: '1200px' }}>
 
           {/* Brand */}
