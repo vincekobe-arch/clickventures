@@ -7,7 +7,7 @@ const MSAL_CONFIG = {
   auth: {
     clientId: '8b151c4c-b5e8-4332-8bde-a4fc750734a2',
     authority: 'https://login.microsoftonline.com/common',
-    redirectUri: 'http://localhost:3000/auth-redirect.html',
+    redirectUri: `${window.location.origin}/auth-redirect.html`,
   },
   cache: {
     cacheLocation: 'localStorage',
@@ -300,7 +300,7 @@ export default function Login() {
       await msalInstance.loginRedirect({
         scopes: ['openid', 'profile', 'email', 'User.Read'],
         prompt: 'select_account',
-        redirectUri: 'http://localhost:3000/login',
+        redirectUri: `${window.location.origin}/login`,
       });
     } catch (e) {
       console.error('MSAL error:', e);
