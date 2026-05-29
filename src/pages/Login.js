@@ -136,10 +136,7 @@ const blurInput  = e => { e.target.style.borderColor = '#e8e8e8'; e.target.style
 
 function CompleteProfileModal({ microsoftData, onDone }) {
   const [personal, setPersonal] = useState({
-    firstName:  microsoftData.name?.split(' ')[0] || '',
-    middleName: '',
-    lastName:   microsoftData.name?.split(' ').slice(1).join(' ') || '',
-    gender: '', birthday: '',
+    firstName: '', middleName: '', lastName: '', gender: '', birthday: '',
   });
   const [username, setUsername] = useState(
     microsoftData.email?.split('@')[0]?.replace(/[^a-z0-9_]/gi, '_') || ''
