@@ -113,6 +113,11 @@ export default function Register() {
     setLoading(true);
     if (!personal.firstName || !personal.lastName || !personal.gender || !personal.birthday)
       return setMsg('Please fill in all required personal information.');
+    const birthDate = new Date(personal.birthday);
+    const minAge = new Date();
+    minAge.setFullYear(minAge.getFullYear() - 18);
+    if (birthDate > minAge)
+      return setMsg('You must be at least 18 years old to register.');
     if (!account.username || !account.password || !account.confirm)
       return setMsg('Please fill in all account fields.');
     if (account.password !== account.confirm)
@@ -340,6 +345,7 @@ export default function Register() {
                     type="date"
                     className="reg-input"
                     style={{ colorScheme: 'light' }}
+                    max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
                     value={personal.birthday}
                     onChange={e => setPersonal({ ...personal, birthday: e.target.value })}
                   />

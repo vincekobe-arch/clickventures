@@ -226,7 +226,9 @@ function CompleteProfileModal({ microsoftData, onDone }) {
             </div>
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Birthday <span className="text-red-500">*</span></label>
-              <input type="date" style={{ ...modalInputStyle, colorScheme: 'light' }} value={personal.birthday} onChange={e => setPersonal({ ...personal, birthday: e.target.value })} onFocus={focusInput} onBlur={blurInput}/>
+              <input type="date" style={{ ...modalInputStyle, colorScheme: 'light' }}
+                max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
+                value={personal.birthday} onChange={e => setPersonal({ ...personal, birthday: e.target.value })} onFocus={focusInput} onBlur={blurInput}/>
             </div>
           </div>
 
