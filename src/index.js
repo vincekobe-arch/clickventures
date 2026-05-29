@@ -4,6 +4,9 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
+if ('scrollRestoration' in history) {
+  history.scrollRestoration = 'manual';
+}
 window.scrollTo(0, 0);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
