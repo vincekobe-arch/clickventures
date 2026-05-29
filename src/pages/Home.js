@@ -57,8 +57,12 @@ export default function Home() {
   const [visible, setVisible] = useState(false);
   const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
   const [contactSent, setContactSent] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   const intervalRef = useRef(null);
   const stripDragRef = useRef(null);
+  const heroRef = useRef(null);
+  const heroDragStart = useRef(null);
 
   const [aboutRef, aboutInView] = useInView();
   const [spotsRef, spotsInView] = useInView();
@@ -86,55 +90,85 @@ export default function Home() {
   useEffect(() => { const t = setTimeout(() => setVisible(true), 100); return () => clearTimeout(t); }, []);
 
   useEffect(() => {
-    const el = stripDragRef.current;
-    if (!el) return;
+    const strip = stripDragRef.current;
+    const hero  = heroRef.current;
+    if (!strip || !hero) return;
+
     let startX = 0;
     let dragging = false;
 
-    function onTouchStart(e) { startX = e.touches[0].clientX; dragging = true; }
-    function onTouchEnd(e) {
+    // ── strip swipe ──
+    function onStripTouchStart(e) { startX = e.touches[0].clientX; dragging = true; }
+    function onStripTouchEnd(e) {
       if (!dragging) return; dragging = false;
       const diff = startX - e.changedTouches[0].clientX;
       if (Math.abs(diff) > 40) {
         clearInterval(intervalRef.current);
         setCurrent(prev => {
-          const next = diff > 0
-            ? (prev + 1) % spots.length
-            : (prev - 1 + spots.length) % spots.length;
-          setFade(false);
-          setTimeout(() => setFade(true), 350);
-          return next;
+          const next = diff > 0 ? (prev + 1) % spots.length : (prev - 1 + spots.length) % spots.length;
+          setFade(false); setTimeout(() => setFade(true), 350); return next;
         });
         startAuto();
       }
     }
-    function onMouseDown(e) { startX = e.clientX; dragging = true; }
-    function onMouseUp(e) {
+    function onStripMouseDown(e) { startX = e.clientX; dragging = true; }
+    function onStripMouseUp(e) {
       if (!dragging) return; dragging = false;
       const diff = startX - e.clientX;
       if (Math.abs(diff) > 40) {
         clearInterval(intervalRef.current);
         setCurrent(prev => {
-          const next = diff > 0
-            ? (prev + 1) % spots.length
-            : (prev - 1 + spots.length) % spots.length;
-          setFade(false);
-          setTimeout(() => setFade(true), 350);
-          return next;
+          const next = diff > 0 ? (prev + 1) % spots.length : (prev - 1 + spots.length) % spots.length;
+          setFade(false); setTimeout(() => setFade(true), 350); return next;
         });
         startAuto();
       }
     }
 
-    el.addEventListener('touchstart', onTouchStart, { passive: true });
-    el.addEventListener('touchend', onTouchEnd);
-    el.addEventListener('mousedown', onMouseDown);
-    window.addEventListener('mouseup', onMouseUp);
+    // ── hero swipe ──
+    function onHeroTouchStart(e) {
+      heroDragStart.current = e.touches[0].clientX;
+      setIsDragging(true);
+      setDragOffset(0);
+    }
+    function onHeroTouchMove(e) {
+      if (heroDragStart.current === null) return;
+      const diff = e.touches[0].clientX - heroDragStart.current;
+      setDragOffset(diff);
+    }
+    function onHeroTouchEnd(e) {
+      if (heroDragStart.current === null) return;
+      const diff = heroDragStart.current - e.changedTouches[0].clientX;
+      setIsDragging(false);
+      setDragOffset(0);
+      heroDragStart.current = null;
+      if (Math.abs(diff) > 50) {
+        clearInterval(intervalRef.current);
+        setCurrent(prev => {
+          const next = diff > 0 ? (prev + 1) % spots.length : (prev - 1 + spots.length) % spots.length;
+          setFade(false); setTimeout(() => setFade(true), 350); return next;
+        });
+        startAuto();
+      }
+    }
+
+    strip.addEventListener('touchstart', onStripTouchStart, { passive: true });
+    strip.addEventListener('touchend', onStripTouchEnd);
+    strip.addEventListener('mousedown', onStripMouseDown);
+    window.addEventListener('mouseup', onStripMouseUp);
+
+    hero.addEventListener('touchstart', onHeroTouchStart, { passive: true });
+    hero.addEventListener('touchmove',  onHeroTouchMove,  { passive: true });
+    hero.addEventListener('touchend',   onHeroTouchEnd);
+
     return () => {
-      el.removeEventListener('touchstart', onTouchStart);
-      el.removeEventListener('touchend', onTouchEnd);
-      el.removeEventListener('mousedown', onMouseDown);
-      window.removeEventListener('mouseup', onMouseUp);
+      strip.removeEventListener('touchstart', onStripTouchStart);
+      strip.removeEventListener('touchend', onStripTouchEnd);
+      strip.removeEventListener('mousedown', onStripMouseDown);
+      window.removeEventListener('mouseup', onStripMouseUp);
+      hero.removeEventListener('touchstart', onHeroTouchStart);
+      hero.removeEventListener('touchmove',  onHeroTouchMove);
+      hero.removeEventListener('touchend',   onHeroTouchEnd);
     };
   }, []);
 
@@ -320,16 +354,29 @@ export default function Home() {
       `}</style>
 
       {/* ── HERO ── */}
-      <div className="relative h-screen overflow-hidden grain-overlay" style={{ minHeight: '640px' }}>
+      <div ref={heroRef} className="relative h-screen overflow-hidden grain-overlay" style={{ minHeight: '640px' }}>
 
-        {/* BG images crossfade */}
-        {spots.map((sp, i) => (
-          <div key={sp.slug} className="absolute inset-0 bg-cover bg-center transition-opacity duration-700" style={{
-            backgroundImage: `url(${sp.img})`,
-            opacity: i === current ? 1 : 0,
+        {/* BG images swipe */}
+        <div
+          className="absolute inset-0 flex"
+          style={{
+            width: `${spots.length * 100}%`,
+            transform: `translateX(calc(-${current * (100 / spots.length)}% + ${dragOffset / spots.length}px))`,
+            transition: isDragging ? 'none' : 'transform 0.55s cubic-bezier(0.4,0,0.2,1)',
+            willChange: 'transform',
             zIndex: 0,
-          }} />
-        ))}
+          }}
+        >
+          {spots.map((sp) => (
+            <div
+              key={sp.slug}
+              className="flex-shrink-0 bg-cover bg-center"
+              style={{ width: `${100 / spots.length}%`, height: '100%' }}
+            >
+              <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url(${sp.img})` }} />
+            </div>
+          ))}
+        </div>
 
         {/* Gradient overlay */}
         <div className="absolute inset-0 z-10" style={{
