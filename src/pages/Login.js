@@ -106,6 +106,20 @@ const css = `
     background-size: 200% 200%;
     animation: gradientShift 8s ease infinite;
   }
+
+  @keyframes waveDot {
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+    40%           { transform: translateY(-6px); opacity: 1; }
+  }
+  .wave-dot {
+    display: inline-block;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #fff;
+    animation: waveDot 1.2s ease infinite;
+  }
+  .wave-dot:nth-child(2) { animation-delay: 0.18s; }
+  .wave-dot:nth-child(3) { animation-delay: 0.36s; }
 `;
 
 function anim(delay = 0, dir = 'up') {
@@ -122,14 +136,9 @@ const blurInput  = e => { e.target.style.borderColor = '#e8e8e8'; e.target.style
 
 function CompleteProfileModal({ microsoftData, onDone }) {
   const [personal, setPersonal] = useState({
-    firstName:  microsoftData.name?.split(' ')[0] || '',
-    middleName: '',
-    lastName:   microsoftData.name?.split(' ').slice(1).join(' ') || '',
-    gender: '', birthday: '',
+    firstName: '', middleName: '', lastName: '', gender: '', birthday: '',
   });
-  const [username, setUsername] = useState(
-    microsoftData.email?.split('@')[0]?.replace(/[^a-z0-9_]/gi, '_') || ''
-  );
+  const [username, setUsername] = useState('');
   const [msg, setMsg]       = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -162,6 +171,9 @@ function CompleteProfileModal({ microsoftData, onDone }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6" style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)' }}>
       <div className="bg-white rounded-2xl w-full overflow-y-auto" style={{ maxWidth: 480, maxHeight: '90vh', boxShadow: '0 24px 80px rgba(0,0,0,0.2)', animation: 'modalIn 0.28s ease forwards' }}>
+        {/* Prevent browser autofill */}
+        <input type="text" autoComplete="username" style={{ display: 'none' }} readOnly />
+        <input type="password" autoComplete="current-password" style={{ display: 'none' }} readOnly />
 
         <div className="px-7 pt-6 pb-0">
           <div className="flex items-center gap-3 mb-1.5">
@@ -188,17 +200,17 @@ function CompleteProfileModal({ microsoftData, onDone }) {
           <div className="grid grid-cols-2 gap-3.5">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">First Name <span className="text-red-500">*</span></label>
-              <input style={modalInputStyle} placeholder="Juan" value={personal.firstName} onChange={e => setPersonal({ ...personal, firstName: e.target.value })} onFocus={focusInput} onBlur={blurInput}/>
+              <input autoComplete="off" style={modalInputStyle} placeholder="Juan" value={personal.firstName} onChange={e => setPersonal({ ...personal, firstName: e.target.value })} onFocus={focusInput} onBlur={blurInput}/>
             </div>
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Last Name <span className="text-red-500">*</span></label>
-              <input style={modalInputStyle} placeholder="dela Cruz" value={personal.lastName} onChange={e => setPersonal({ ...personal, lastName: e.target.value })} onFocus={focusInput} onBlur={blurInput}/>
+              <input autoComplete="off" style={modalInputStyle} placeholder="dela Cruz" value={personal.lastName} onChange={e => setPersonal({ ...personal, lastName: e.target.value })} onFocus={focusInput} onBlur={blurInput}/>
             </div>
           </div>
 
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Middle Name <span className="text-gray-300 font-normal normal-case tracking-normal">(optional)</span></label>
-            <input style={modalInputStyle} placeholder="Santos" value={personal.middleName} onChange={e => setPersonal({ ...personal, middleName: e.target.value })} onFocus={focusInput} onBlur={blurInput}/>
+            <input autoComplete="off" style={modalInputStyle} placeholder="Santos" value={personal.middleName} onChange={e => setPersonal({ ...personal, middleName: e.target.value })} onFocus={focusInput} onBlur={blurInput}/>
           </div>
 
           <div className="grid grid-cols-2 gap-3.5">
@@ -224,7 +236,7 @@ function CompleteProfileModal({ microsoftData, onDone }) {
 
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Username <span className="text-red-500">*</span></label>
-            <input style={modalInputStyle} placeholder="e.g. juan_delacruz" value={username} onChange={e => setUsername(e.target.value)} onFocus={focusInput} onBlur={blurInput}/>
+            <input autoComplete="off" style={modalInputStyle} placeholder="e.g. juan_delacruz" value={username} onChange={e => setUsername(e.target.value)} onFocus={focusInput} onBlur={blurInput}/>
           </div>
 
           <button
@@ -242,7 +254,8 @@ function CompleteProfileModal({ microsoftData, onDone }) {
 
 export default function Login() {
   const [form, setForm] = useState({ username: '', password: '' });
-  const [err, setErr]         = useState('');
+  const [err, setErr]           = useState('');
+  const [loading, setLoading]   = useState(false);
   const [msLoading, setMsLoading] = useState(false);
   const [msProfile, setMsProfile] = useState(null);
   const nav = useNavigate();
@@ -275,7 +288,9 @@ export default function Login() {
   const from = location.state?.from || null;
 
   const submit = async () => {
+    if (loading) return;
     setErr('');
+    setLoading(true);
     try {
       const res = await API.post('/auth.php', { action: 'login', ...form });
       if (res.data.success) {
@@ -285,9 +300,11 @@ export default function Login() {
         window.location.replace(dest);
       } else {
         setErr(res.data.message);
+        setLoading(false);
       }
     } catch {
       setErr('Something went wrong. Please try again.');
+      setLoading(false);
     }
   };
 
@@ -451,10 +468,17 @@ export default function Login() {
 
             <button
               onClick={submit}
+              disabled={loading}
               className="login-btn w-full text-white font-black uppercase tracking-wider rounded-lg py-3.5 border-none cursor-pointer"
-              style={{ background: '#111', fontSize: '0.76rem', letterSpacing: '0.12em', ...anim(0.5) }}
+              style={{ background: '#111', fontSize: '0.76rem', letterSpacing: '0.12em', ...anim(0.5), opacity: loading ? 0.85 : 1 }}
             >
-              Login
+              {loading ? (
+                <span className="flex items-center justify-center gap-1.5">
+                  <span className="wave-dot" />
+                  <span className="wave-dot" />
+                  <span className="wave-dot" />
+                </span>
+              ) : 'Login'}
             </button>
 
             {/* Divider */}

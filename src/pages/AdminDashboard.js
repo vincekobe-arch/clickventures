@@ -1934,6 +1934,16 @@ const [activeTab, setActiveTab] = useState('posts');
     return () => window.removeEventListener('keydown', handler);
   }, [fullscreen]);
 
+  useEffect(() => {
+    const anyOpen = !!(modal || lightbox || uploadModalOpen || folderModal);
+    document.body.style.overflow = anyOpen ? 'hidden' : '';
+    document.body.style.touchAction = anyOpen ? 'none' : '';
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [modal, lightbox, uploadModalOpen, folderModal]);
+
   if (!user || user.role !== 'admin') {
     return (
       <>
@@ -2321,10 +2331,14 @@ const [activeTab, setActiveTab] = useState('posts');
               onClick={() => setLightbox(null)}
               tabIndex={0} ref={el => el?.focus()}
               onKeyDown={e => { if (e.key==='ArrowLeft') { e.stopPropagation(); setIdx(ci-1); } if (e.key==='ArrowRight') { e.stopPropagation(); setIdx(ci+1); } }}
+              onTouchMove={e => e.preventDefault()}
             >
               <img src={curSrc} alt={curCap}
                 style={{ maxWidth:'90vw', maxHeight:'80vh', objectFit:'contain', borderRadius:8, animation:'modalIn 0.28s cubic-bezier(0.34,1.56,0.64,1) forwards' }}
                 onClick={e => e.stopPropagation()}
+                onTouchStart={e => e.stopPropagation()}
+                onTouchMove={e => { e.stopPropagation(); e.preventDefault(); }}
+                onTouchEnd={e => e.stopPropagation()}
               />
               {curCap && (
                 <div className="mt-4 text-center" style={{ color:'rgba(255,255,255,0.55)', fontSize:'0.84rem', maxWidth:520, lineHeight:1.6 }}>{curCap}</div>
