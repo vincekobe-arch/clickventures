@@ -1508,7 +1508,7 @@ export default function SpotPage() {
           </div>
 
           <div className="mt-7" style={{ animation: 'fadeUp 0.6s ease 0.24s forwards', opacity: 0 }}>
-            <button className="sp-back-btn" onClick={() => navigate('/dashboard')}>← Back to spots</button>
+            <button className="sp-back-btn" onClick={() => navigate('/dashboard')}>← Back to dashboard</button>
           </div>
         </div>
       </div>
