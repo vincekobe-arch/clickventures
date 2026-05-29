@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -8,12 +8,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import UserDashboard from './pages/UserDashboard';
 import Navbar from './components/Navbar';
 import LoadingScreen from './components/LoadingScreen';
-
-function ScrollToTop() {
-  const { pathname } = useLocation();
-  React.useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
-  return null;
-}
+import ScrollToTop from './components/ScrollToTop';
 
 // Redirects logged-in users away from public-only pages (home, login, register)
 function PublicOnly({ children }) {
