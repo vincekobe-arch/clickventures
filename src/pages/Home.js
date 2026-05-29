@@ -62,7 +62,7 @@ export default function Home() {
   const [stripDragOffset, setStripDragOffset] = useState(0);
   const [stripIsDragging, setStripIsDragging] = useState(false);
   const stripDragStartX = useRef(null);
-  const heroDragStart = useRef(null);
+  const stripDragStartY = useRef(null);
 
   const [aboutRef, aboutInView] = useInView();
   const [spotsRef, spotsInView] = useInView();
@@ -95,6 +95,7 @@ export default function Home() {
 
     function onTouchStart(e) {
       stripDragStartX.current = e.touches[0].clientX;
+      stripDragStartY.current = e.touches[0].clientY;
       setStripIsDragging(true);
       setStripDragOffset(0);
       clearInterval(intervalRef.current);
@@ -102,7 +103,12 @@ export default function Home() {
     function onTouchMove(e) {
       if (stripDragStartX.current === null) return;
       const diff = e.touches[0].clientX - stripDragStartX.current;
-      setStripDragOffset(diff);
+      const absDiffX = Math.abs(diff);
+      const absDiffY = Math.abs(e.touches[0].clientY - (stripDragStartY.current ?? e.touches[0].clientY));
+      if (absDiffX > absDiffY) {
+        e.preventDefault();
+        setStripDragOffset(diff);
+      }
     }
     function onTouchEnd(e) {
       if (stripDragStartX.current === null) return;
@@ -110,6 +116,7 @@ export default function Home() {
       setStripIsDragging(false);
       setStripDragOffset(0);
       stripDragStartX.current = null;
+      stripDragStartY.current = null;
       if (Math.abs(diff) > 40) {
         setCurrent(prev => {
           const next = diff > 0 ? (prev + 1) % spots.length : (prev - 1 + spots.length) % spots.length;
@@ -147,7 +154,7 @@ export default function Home() {
     }
 
     strip.addEventListener('touchstart', onTouchStart, { passive: true });
-    strip.addEventListener('touchmove',  onTouchMove,  { passive: true });
+    strip.addEventListener('touchmove',  onTouchMove,  { passive: false });
     strip.addEventListener('touchend',   onTouchEnd);
     strip.addEventListener('mousedown',  onMouseDown);
     window.addEventListener('mousemove', onMouseMove);
