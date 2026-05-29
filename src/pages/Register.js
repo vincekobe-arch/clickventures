@@ -84,6 +84,48 @@ function anim(delay = 0, dir = 'up') {
 
 const GENDERS = ['Male', 'Female', 'Non-binary', 'Other', 'Prefer not to say'];
 
+function PasswordInput({ value, placeholder, onChange, className, style }) {
+  const [show, setShow] = React.useState(false);
+  return (
+    <div className="relative">
+      <input
+        type={show ? 'text' : 'password'}
+        className={className || 'reg-input'}
+        style={{ paddingRight: '44px', ...style }}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+      />
+      <button
+        type="button"
+        onClick={() => setShow(s => !s)}
+        style={{
+          position: 'absolute', right: '14px', top: '50%',
+          transform: 'translateY(-50%)',
+          background: 'none', border: 'none', cursor: 'pointer',
+          color: 'rgba(0,0,0,0.35)', padding: '0', display: 'flex',
+          alignItems: 'center', justifyContent: 'center',
+        }}
+        tabIndex={-1}
+      >
+        {show ? (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/>
+            <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/>
+            <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/>
+            <line x1="2" y1="2" x2="22" y2="22"/>
+          </svg>
+        ) : (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <ellipse cx="12" cy="12" rx="10" ry="6" />
+            <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>
+          </svg>
+        )}
+      </button>
+    </div>
+  );
+}
+
 export default function Register() {
   const [personal, setPersonal] = useState({ firstName: '', middleName: '', lastName: '', gender: '', birthday: '' });
   const [account, setAccount] = useState({ username: '', password: '', confirm: '' });
@@ -379,9 +421,7 @@ export default function Register() {
                 <label className="block font-bold uppercase tracking-wider text-gray-500 mb-2" style={{ fontSize: '0.68rem' }}>
                   Password <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="password"
-                  className="reg-input"
+                <PasswordInput
                   placeholder="Min. 8 characters"
                   value={account.password}
                   onChange={e => setAccount({ ...account, password: e.target.value })}
@@ -430,16 +470,11 @@ export default function Register() {
                   Confirm Password <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <input
-                    type="password"
-                    className="reg-input"
-                    style={{
-                      borderColor: passwordMatch ? '#27ae60' : passwordMismatch ? '#e74c3c' : '#e8e8e8',
-                      paddingRight: '42px',
-                    }}
+                  <PasswordInput
                     placeholder="Re-enter password"
                     value={account.confirm}
                     onChange={e => setAccount({ ...account, confirm: e.target.value })}
+                    style={{ borderColor: passwordMatch ? '#27ae60' : passwordMismatch ? '#e74c3c' : '#e8e8e8' }}
                   />
                   {(passwordMatch || passwordMismatch) && (
                     <div className="absolute right-3.5 top-1/2 -translate-y-1/2" style={{ fontSize: '1rem', color: passwordMatch ? '#27ae60' : '#e74c3c' }}>
