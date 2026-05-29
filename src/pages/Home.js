@@ -59,6 +59,9 @@ export default function Home() {
   const [contactSent, setContactSent] = useState(false);
   const intervalRef = useRef(null);
   const stripDragRef = useRef(null);
+  const [stripDragOffset, setStripDragOffset] = useState(0);
+  const [stripIsDragging, setStripIsDragging] = useState(false);
+  const stripDragStartX = useRef(null);
   const heroDragStart = useRef(null);
 
   const [aboutRef, aboutInView] = useInView();
@@ -90,46 +93,73 @@ export default function Home() {
     const strip = stripDragRef.current;
     if (!strip) return;
 
-    let startX = 0;
-    let dragging = false;
-
-    function onTouchStart(e) { startX = e.touches[0].clientX; dragging = true; }
-    function onTouchEnd(e) {
-      if (!dragging) return; dragging = false;
-      const diff = startX - e.changedTouches[0].clientX;
-      if (Math.abs(diff) > 40) {
-        clearInterval(intervalRef.current);
-        setCurrent(prev => {
-          const next = diff > 0 ? (prev + 1) % spots.length : (prev - 1 + spots.length) % spots.length;
-          setFade(false); setTimeout(() => setFade(true), 350); return next;
-        });
-        startAuto();
-      }
+    function onTouchStart(e) {
+      stripDragStartX.current = e.touches[0].clientX;
+      setStripIsDragging(true);
+      setStripDragOffset(0);
+      clearInterval(intervalRef.current);
     }
-    function onMouseDown(e) { startX = e.clientX; dragging = true; }
+    function onTouchMove(e) {
+      if (stripDragStartX.current === null) return;
+      const diff = e.touches[0].clientX - stripDragStartX.current;
+      setStripDragOffset(diff);
+    }
+    function onTouchEnd(e) {
+      if (stripDragStartX.current === null) return;
+      const diff = stripDragStartX.current - e.changedTouches[0].clientX;
+      setStripIsDragging(false);
+      setStripDragOffset(0);
+      stripDragStartX.current = null;
+      if (Math.abs(diff) > 40) {
+        setCurrent(prev => {
+          const next = diff > 0 ? (prev + 1) % spots.length : (prev - 1 + spots.length) % spots.length;
+          setFade(false); setTimeout(() => setFade(true), 350); return next;
+        });
+      }
+      startAuto();
+    }
+
+    function onMouseDown(e) {
+      stripDragStartX.current = e.clientX;
+      setStripIsDragging(true);
+      setStripDragOffset(0);
+      clearInterval(intervalRef.current);
+    }
+    function onMouseMove(e) {
+      if (stripDragStartX.current === null) return;
+      const diff = e.clientX - stripDragStartX.current;
+      setStripDragOffset(diff);
+    }
     function onMouseUp(e) {
-      if (!dragging) return; dragging = false;
-      const diff = startX - e.clientX;
+      if (stripDragStartX.current === null) return;
+      const diff = stripDragStartX.current - e.clientX;
+      setStripIsDragging(false);
+      setStripDragOffset(0);
+      stripDragStartX.current = null;
       if (Math.abs(diff) > 40) {
         clearInterval(intervalRef.current);
         setCurrent(prev => {
           const next = diff > 0 ? (prev + 1) % spots.length : (prev - 1 + spots.length) % spots.length;
           setFade(false); setTimeout(() => setFade(true), 350); return next;
         });
-        startAuto();
       }
+      startAuto();
     }
 
     strip.addEventListener('touchstart', onTouchStart, { passive: true });
-    strip.addEventListener('touchend', onTouchEnd);
-    strip.addEventListener('mousedown', onMouseDown);
-    window.addEventListener('mouseup', onMouseUp);
+    strip.addEventListener('touchmove',  onTouchMove,  { passive: true });
+    strip.addEventListener('touchend',   onTouchEnd);
+    strip.addEventListener('mousedown',  onMouseDown);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup',   onMouseUp);
 
     return () => {
       strip.removeEventListener('touchstart', onTouchStart);
-      strip.removeEventListener('touchend', onTouchEnd);
-      strip.removeEventListener('mousedown', onMouseDown);
-      window.removeEventListener('mouseup', onMouseUp);
+      strip.removeEventListener('touchmove',  onTouchMove);
+      strip.removeEventListener('touchend',   onTouchEnd);
+      strip.removeEventListener('mousedown',  onMouseDown);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup',   onMouseUp);
     };
   }, []);
 
@@ -428,8 +458,8 @@ export default function Home() {
           <div
             className="thumbnail-strip-inner flex items-end gap-3"
             style={{
-              transform: `translateX(calc(50vw - 130px + ${-current * 197}px))`,
-              transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+              transform: `translateX(calc(50vw - 130px + ${-current * 197}px + ${stripDragOffset}px))`,
+              transition: stripIsDragging ? 'none' : 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
               willChange: 'transform',
             }}
           >
