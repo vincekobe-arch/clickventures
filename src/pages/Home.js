@@ -93,9 +93,12 @@ export default function Home() {
     const strip = stripDragRef.current;
     if (!strip) return;
 
+    let activeCurrent = current;
+
     function onTouchStart(e) {
       stripDragStartX.current = e.touches[0].clientX;
       stripDragStartY.current = e.touches[0].clientY;
+      activeCurrent = current;
       setStripIsDragging(true);
       setStripDragOffset(0);
       clearInterval(intervalRef.current);
@@ -107,27 +110,27 @@ export default function Home() {
       const absDiffY = Math.abs(e.touches[0].clientY - (stripDragStartY.current ?? e.touches[0].clientY));
       if (absDiffX > absDiffY) {
         e.preventDefault();
-        setStripDragOffset(diff);
+        const steps = Math.round(-diff / 160);
+        const newIdx = Math.max(0, Math.min(spots.length - 1, activeCurrent + steps));
+        setCurrent(prev => {
+          if (prev !== newIdx) { setFade(false); setTimeout(() => setFade(true), 350); }
+          return newIdx;
+        });
+        setStripDragOffset(diff + steps * 160);
       }
     }
     function onTouchEnd(e) {
       if (stripDragStartX.current === null) return;
-      const diff = stripDragStartX.current - e.changedTouches[0].clientX;
       setStripIsDragging(false);
       setStripDragOffset(0);
       stripDragStartX.current = null;
       stripDragStartY.current = null;
-      if (Math.abs(diff) > 40) {
-        setCurrent(prev => {
-          const next = diff > 0 ? (prev + 1) % spots.length : (prev - 1 + spots.length) % spots.length;
-          setFade(false); setTimeout(() => setFade(true), 350); return next;
-        });
-      }
       startAuto();
     }
 
     function onMouseDown(e) {
       stripDragStartX.current = e.clientX;
+      activeCurrent = current;
       setStripIsDragging(true);
       setStripDragOffset(0);
       clearInterval(intervalRef.current);
@@ -135,21 +138,19 @@ export default function Home() {
     function onMouseMove(e) {
       if (stripDragStartX.current === null) return;
       const diff = e.clientX - stripDragStartX.current;
-      setStripDragOffset(diff);
+      const steps = Math.round(-diff / 160);
+      const newIdx = Math.max(0, Math.min(spots.length - 1, activeCurrent + steps));
+      setCurrent(prev => {
+        if (prev !== newIdx) { setFade(false); setTimeout(() => setFade(true), 350); }
+        return newIdx;
+      });
+      setStripDragOffset(diff + steps * 160);
     }
     function onMouseUp(e) {
       if (stripDragStartX.current === null) return;
-      const diff = stripDragStartX.current - e.clientX;
       setStripIsDragging(false);
       setStripDragOffset(0);
       stripDragStartX.current = null;
-      if (Math.abs(diff) > 40) {
-        clearInterval(intervalRef.current);
-        setCurrent(prev => {
-          const next = diff > 0 ? (prev + 1) % spots.length : (prev - 1 + spots.length) % spots.length;
-          setFade(false); setTimeout(() => setFade(true), 350); return next;
-        });
-      }
       startAuto();
     }
 
