@@ -93,64 +93,88 @@ export default function Home() {
     const strip = stripDragRef.current;
     if (!strip) return;
 
-    let activeCurrent = current;
+    const dragState = {
+      startX: null,
+      startY: null,
+      startCurrent: 0,
+      locked: null, // 'h' | 'v' | null
+    };
 
     function onTouchStart(e) {
-      stripDragStartX.current = e.touches[0].clientX;
-      stripDragStartY.current = e.touches[0].clientY;
-      activeCurrent = current;
+      dragState.startX = e.touches[0].clientX;
+      dragState.startY = e.touches[0].clientY;
+      dragState.startCurrent = current;
+      dragState.locked = null;
       setStripIsDragging(true);
       setStripDragOffset(0);
       clearInterval(intervalRef.current);
     }
+
     function onTouchMove(e) {
-      if (stripDragStartX.current === null) return;
-      const diff = e.touches[0].clientX - stripDragStartX.current;
-      const absDiffX = Math.abs(diff);
-      const absDiffY = Math.abs(e.touches[0].clientY - (stripDragStartY.current ?? e.touches[0].clientY));
-      if (absDiffX > absDiffY) {
-        e.preventDefault();
-        const steps = Math.round(-diff / 160);
-        const newIdx = Math.max(0, Math.min(spots.length - 1, activeCurrent + steps));
-        setCurrent(prev => {
-          if (prev !== newIdx) { setFade(false); setTimeout(() => setFade(true), 350); }
-          return newIdx;
-        });
-        setStripDragOffset(diff + steps * 160);
+      if (dragState.startX === null) return;
+      const dx = e.touches[0].clientX - dragState.startX;
+      const dy = e.touches[0].clientY - dragState.startY;
+
+      // Determine axis lock on first significant movement
+      if (dragState.locked === null) {
+        if (Math.abs(dx) > 6 || Math.abs(dy) > 6) {
+          dragState.locked = Math.abs(dx) >= Math.abs(dy) ? 'h' : 'v';
+        } else {
+          return;
+        }
       }
+
+      if (dragState.locked === 'v') return;
+
+      e.preventDefault();
+      // Show live drag offset without snapping
+      setStripDragOffset(dx);
     }
+
     function onTouchEnd(e) {
-      if (stripDragStartX.current === null) return;
+      if (dragState.startX === null) return;
+      const dx = e.changedTouches[0].clientX - dragState.startX;
+
+      if (dragState.locked === 'h') {
+        // Snap: each card is ~197px wide, require 60px threshold
+        const steps = Math.round(-dx / 197);
+        const newIdx = Math.max(0, Math.min(spots.length - 1, dragState.startCurrent + steps));
+        if (newIdx !== dragState.startCurrent) setFade(false);
+        setCurrent(newIdx);
+        setTimeout(() => setFade(true), 350);
+      }
+
       setStripIsDragging(false);
       setStripDragOffset(0);
-      stripDragStartX.current = null;
-      stripDragStartY.current = null;
+      dragState.startX = null;
+      dragState.startY = null;
+      dragState.locked = null;
       startAuto();
     }
 
     function onMouseDown(e) {
-      stripDragStartX.current = e.clientX;
-      activeCurrent = current;
+      dragState.startX = e.clientX;
+      dragState.startCurrent = current;
       setStripIsDragging(true);
       setStripDragOffset(0);
       clearInterval(intervalRef.current);
     }
     function onMouseMove(e) {
-      if (stripDragStartX.current === null) return;
-      const diff = e.clientX - stripDragStartX.current;
-      const steps = Math.round(-diff / 160);
-      const newIdx = Math.max(0, Math.min(spots.length - 1, activeCurrent + steps));
-      setCurrent(prev => {
-        if (prev !== newIdx) { setFade(false); setTimeout(() => setFade(true), 350); }
-        return newIdx;
-      });
-      setStripDragOffset(diff + steps * 160);
+      if (dragState.startX === null) return;
+      const dx = e.clientX - dragState.startX;
+      setStripDragOffset(dx);
     }
     function onMouseUp(e) {
-      if (stripDragStartX.current === null) return;
+      if (dragState.startX === null) return;
+      const dx = e.clientX - dragState.startX;
+      const steps = Math.round(-dx / 197);
+      const newIdx = Math.max(0, Math.min(spots.length - 1, dragState.startCurrent + steps));
+      if (newIdx !== dragState.startCurrent) setFade(false);
+      setCurrent(newIdx);
+      setTimeout(() => setFade(true), 350);
       setStripIsDragging(false);
       setStripDragOffset(0);
-      stripDragStartX.current = null;
+      dragState.startX = null;
       startAuto();
     }
 
