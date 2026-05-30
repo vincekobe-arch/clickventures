@@ -60,6 +60,7 @@ const css = `
     box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
   }
   .cv-input::placeholder { color: rgba(0,0,0,0.28); }
+  input[type="date"] { width: 100%; box-sizing: border-box; }
 
   .media-thumb {
     position: relative; overflow: hidden;
@@ -1431,6 +1432,19 @@ function PhotoCropUpload({ preview, onFile, onClear }) {
 function MemberCard({ m, baseUrl, userId, spotSlug, onReload, onViewDetail }) {
   const [menuOpen,      setMenuOpen]      = React.useState(false);
   const [editModalOpen, setEditModalOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!editModalOpen) return;
+    const prev = { overflow: document.body.style.overflow, position: document.body.style.position, width: document.body.style.width };
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    return () => {
+      document.body.style.overflow = prev.overflow;
+      document.body.style.position = prev.position;
+      document.body.style.width = prev.width;
+    };
+  }, [editModalOpen]);
   const [editing,       setEditing]       = React.useState(false);
   const [confirm,       setConfirm]       = React.useState(false);
   const [deleting,      setDeleting]      = React.useState(false);
@@ -1583,7 +1597,7 @@ function MemberCard({ m, baseUrl, userId, spotSlug, onReload, onViewDetail }) {
       {editing && editModalOpen && ReactDOM.createPortal(
   <div onClick={() => { setEditing(false); setEditModalOpen(false); setEditPhoto(null); setPreview(null); }}
   className="fixed inset-0 flex items-center justify-center"
-  style={{ background:'rgba(0,0,0,0.55)', backdropFilter:'blur(8px)', animation:'fadeIn 0.2s ease forwards', zIndex:9999, padding:'24px' }}>
+  style={{ background:'rgba(0,0,0,0.55)', backdropFilter:'blur(8px)', animation:'fadeIn 0.2s ease forwards', zIndex:9999, padding:'24px', touchAction:'pan-y' }}>
     <div onClick={e => e.stopPropagation()} className="bg-white w-full flex flex-col overflow-hidden"
       style={{ borderRadius:16, maxWidth:520, maxHeight:'88vh', boxShadow:'0 24px 80px rgba(0,0,0,0.18)', animation:'modalIn 0.28s cubic-bezier(0.34,1.56,0.64,1) forwards', touchAction:'pan-y' }}>
 
@@ -1688,6 +1702,19 @@ function MemberCard({ m, baseUrl, userId, spotSlug, onReload, onViewDetail }) {
 // ── AuthorsPanel ──────────────────────────────────────────────────────────────
 function AuthorsPanel({ members, userId, spotSlug, baseUrl, onReload }) {
   const [adding,       setAdding]       = React.useState(false);
+
+  React.useEffect(() => {
+    if (!adding) return;
+    const prev = { overflow: document.body.style.overflow, position: document.body.style.position, width: document.body.style.width };
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    return () => {
+      document.body.style.overflow = prev.overflow;
+      document.body.style.position = prev.position;
+      document.body.style.width = prev.width;
+    };
+  }, [adding]);
   const [saving,       setSaving]       = React.useState(false);
   const [msg,          setMsg]          = React.useState('');
   const [msgOk,        setMsgOk]        = React.useState(false);
@@ -1768,7 +1795,7 @@ function AuthorsPanel({ members, userId, spotSlug, baseUrl, onReload }) {
       {/* Add Member Modal */}
       {adding && ReactDOM.createPortal(
   <div onClick={() => { setAdding(false); resetForm(); }} className="fixed inset-0 flex items-center justify-center"
-  style={{ background:'rgba(0,0,0,0.55)', backdropFilter:'blur(8px)', animation:'fadeIn 0.2s ease forwards', zIndex:9999, padding:'24px' }}>
+  style={{ background:'rgba(0,0,0,0.55)', backdropFilter:'blur(8px)', animation:'fadeIn 0.2s ease forwards', zIndex:9999, padding:'24px', touchAction:'pan-y' }}>
   <div onClick={e => e.stopPropagation()} className="bg-white w-full flex flex-col"
   style={{ borderRadius:16, maxWidth:520, maxHeight:'88vh', boxShadow:'0 24px 80px rgba(0,0,0,0.18)', animation:'modalIn 0.28s cubic-bezier(0.34,1.56,0.64,1) forwards', touchAction:'pan-y' }}>
 
@@ -1851,7 +1878,7 @@ function AuthorsPanel({ members, userId, spotSlug, baseUrl, onReload }) {
       {/* View Detail Modal */}
       {detailMember && ReactDOM.createPortal(
         <div onClick={() => { setDetailMember(null); setDetailImgZoom(false); }} className="fixed inset-0 z-50 flex items-center justify-center p-8"
-          style={{ background:'rgba(0,0,0,0.55)', backdropFilter:'blur(8px)', animation:'fadeIn 0.2s ease forwards', padding: '12px' }}>
+  style={{ background:'rgba(0,0,0,0.55)', backdropFilter:'blur(8px)', animation:'fadeIn 0.2s ease forwards', padding:'12px', touchAction:'pan-y' }}>
           <div onClick={e => e.stopPropagation()} className="bg-white w-full flex flex-col overflow-hidden"
   style={{ borderRadius:16, maxWidth:520, maxHeight:'88vh', boxShadow:'0 24px 80px rgba(0,0,0,0.18)', animation:'modalIn 0.28s cubic-bezier(0.34,1.56,0.64,1) forwards', touchAction:'pan-y' }}>
 
@@ -2057,11 +2084,15 @@ function useAdminSwipeTabs(activeTab, setActiveTab) {
     const el = ref.current;
     if (!el) return;
 
+    function isModalOpen() {
+      return !!document.querySelector(
+        '.fixed.inset-0[style*="z-index: 9999"], .fixed.inset-0[style*="zIndex: 9999"], [style*="z-index:9999"], [style*="z-index: 9999"]'
+      );
+    }
+
     function onTouchStart(e) {
-      if (e.target.closest('[data-swipe-protected]')) {
-        startXRef.current = null;
-        return;
-      }
+      if (isModalOpen()) { startXRef.current = null; return; }
+      if (e.target.closest('[data-swipe-protected]')) { startXRef.current = null; return; }
       startXRef.current = e.touches[0].clientX;
       startYRef.current = e.touches[0].clientY;
     }
