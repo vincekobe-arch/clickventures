@@ -1542,77 +1542,18 @@ function Lightbox({ lightbox, setLightbox }) {
     setLightbox({ ...lightbox, currentIdx: (i + all.length) % all.length });
   };
 
-  // ── zoom/pan state ──
-  const [scale,   setScale]   = useState(1);
-  const [offsetX, setOffsetX] = useState(0);
-  const [offsetY, setOffsetY] = useState(0);
-  const isDragging  = useRef(false);
-  const lastDist    = useRef(null);
-  const dragStart   = useRef({ x: 0, y: 0, ox: 0, oy: 0 });
   const swipeStartX = useRef(null);
   const swipeStartY = useRef(null);
-  const scaleRef    = useRef(1);
-  const offsetXRef  = useRef(0);
-  const offsetYRef  = useRef(0);
-
-  function setScaleSync(v)   { scaleRef.current = v;   setScale(v); }
-  function setOffsetXSync(v) { offsetXRef.current = v; setOffsetX(v); }
-  function setOffsetYSync(v) { offsetYRef.current = v; setOffsetY(v); }
-
-  function resetZoom() {
-    setScaleSync(1); setOffsetXSync(0); setOffsetYSync(0);
-  }
-
-  // reset zoom on image change
-  useEffect(() => { resetZoom(); }, [ci]);
-
-  function clamp(val, min, max) { return Math.min(max, Math.max(min, val)); }
 
   function onImgTouchStart(e) {
     e.stopPropagation();
-    if (e.touches.length === 1) {
-      swipeStartX.current = e.touches[0].clientX;
-      swipeStartY.current = e.touches[0].clientY;
-      isDragging.current = true;
-      dragStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, ox: offsetXRef.current, oy: offsetYRef.current };
-      lastDist.current = null;
-    } else if (e.touches.length === 2) {
-      swipeStartX.current = null;
-      isDragging.current = false;
-      lastDist.current = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-    }
-  }
-
-  function onImgTouchMove(e) {
-    e.stopPropagation();
-    e.preventDefault();
-    if (e.touches.length === 2) {
-      const dist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-      if (lastDist.current) {
-        const delta = dist / lastDist.current;
-        const next = clamp(scaleRef.current * delta, 1, 5);
-        setScaleSync(next);
-      }
-      lastDist.current = dist;
-    } else if (e.touches.length === 1 && isDragging.current && scaleRef.current > 1) {
-      const dx = e.touches[0].clientX - dragStart.current.x;
-      const dy = e.touches[0].clientY - dragStart.current.y;
-      setOffsetXSync(dragStart.current.ox + dx);
-      setOffsetYSync(dragStart.current.oy + dy);
-    }
+    swipeStartX.current = e.touches[0].clientX;
+    swipeStartY.current = e.touches[0].clientY;
   }
 
   function onImgTouchEnd(e) {
     e.stopPropagation();
-    isDragging.current = false;
-    lastDist.current = null;
-    if (scaleRef.current <= 1 && swipeStartX.current !== null && e.changedTouches.length === 1) {
+    if (swipeStartX.current !== null && e.changedTouches.length === 1) {
       const dx = swipeStartX.current - e.changedTouches[0].clientX;
       const dy = Math.abs(e.changedTouches[0].clientY - swipeStartY.current);
       if (Math.abs(dx) > 40 && Math.abs(dx) > dy && all.length > 1) {
@@ -1622,30 +1563,12 @@ function Lightbox({ lightbox, setLightbox }) {
     swipeStartX.current = null;
   }
 
-  // double-tap to zoom
-  const lastTapRef = useRef(0);
-  function onImgDoubleTap(e) {
-    e.stopPropagation();
-    if (scale > 1) { resetZoom(); } else { setScale(2.5); }
-  }
-  function onImgClick(e) {
-    e.stopPropagation();
-    const now = Date.now();
-    if (now - lastTapRef.current < 300) onImgDoubleTap(e);
-    lastTapRef.current = now;
-  }
-
-  // mouse wheel zoom
-  function onWheel(e) {
-    e.preventDefault();
-    setScale(s => clamp(s + (e.deltaY < 0 ? 0.15 : -0.15), 1, 5));
-    if (scale <= 1) { setOffsetX(0); setOffsetY(0); }
-  }
+  function onImgClick(e) { e.stopPropagation(); }
 
   return (
     <div
       className="sp-lightbox-overlay"
-      onClick={() => { if (scale > 1) { resetZoom(); } else { setLightbox(null); } }}
+      onClick={() => setLightbox(null)}
       tabIndex={0}
       ref={el => el?.focus()}
       onKeyDown={e => {
@@ -1653,45 +1576,17 @@ function Lightbox({ lightbox, setLightbox }) {
         if (e.key === 'ArrowLeft')  { e.stopPropagation(); setIdx(ci - 1); }
         if (e.key === 'ArrowRight') { e.stopPropagation(); setIdx(ci + 1); }
       }}
-      onWheel={onWheel}
     >
       {/* image wrapper */}
-      <div
-        style={{
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          maxWidth: '90vw',
-          maxHeight: '80vh',
-          overflow: 'hidden',
-          borderRadius: 8,
-          touchAction: 'none',
-        }}
-        onClick={e => e.stopPropagation()}
-      >
-        <img
-          src={curSrc}
-          alt={curCap}
-          draggable={false}
-          style={{
-            maxWidth: '90vw',
-            maxHeight: '80vh',
-            objectFit: 'contain',
-            borderRadius: 8,
-            animation: 'modalIn 0.28s cubic-bezier(0.34,1.56,0.64,1) forwards',
-            transform: `scale(${scale}) translate(${offsetX / scale}px, ${offsetY / scale}px)`,
-            transition: isDragging.current ? 'none' : 'transform 0.2s ease',
-            cursor: scale > 1 ? 'grab' : 'zoom-in',
-            userSelect: 'none',
-            WebkitUserSelect: 'none',
-          }}
-          onTouchStart={onImgTouchStart}
-          onTouchMove={onImgTouchMove}
-          onTouchEnd={onImgTouchEnd}
-          onClick={onImgClick}
-        />
-      </div>
+      <img
+        src={curSrc}
+        alt={curCap}
+        draggable={false}
+        className="sp-lightbox-img"
+        onTouchStart={onImgTouchStart}
+        onTouchEnd={onImgTouchEnd}
+        onClick={onImgClick}
+      />
 
       {curCap && (
         <div className="mt-4 text-center" style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.84rem', maxWidth: 520, lineHeight: 1.6 }}>{curCap}</div>
@@ -1699,7 +1594,7 @@ function Lightbox({ lightbox, setLightbox }) {
 
       
 
-      {all.length > 1 && scale <= 1 && (
+      {all.length > 1 && (
         <>
           <button onClick={e => { e.stopPropagation(); setIdx(ci - 1); }}
             className="absolute flex items-center justify-center cursor-pointer transition-all duration-150"
