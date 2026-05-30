@@ -965,10 +965,6 @@ function FeedPost({ post, baseUrl, currentUserId, onImageClick, onViewAll, animD
           <div className="font-bold" style={{ fontSize: '0.88rem', color: '#111', fontFamily: "'DM Serif Display',serif" }}>{name}</div>
           <div className="flex items-center gap-1 mt-0.5">
             <span style={{ fontSize: '0.68rem', color: 'rgba(0,0,0,0.35)' }}>{timeAgo(post.uploaded_at || post.created_at)}</span>
-            <span style={{ color: 'rgba(0,0,0,0.15)' }}>·</span>
-            <span className="font-black uppercase" style={{ fontSize: '0.54rem', letterSpacing: '0.09em', padding: '1px 7px', borderRadius: 20, ...typeBadgeStyle }}>
-              {isAlbum ? 'album' : post.file_type}
-            </span>
           </div>
         </div>
       </div>
