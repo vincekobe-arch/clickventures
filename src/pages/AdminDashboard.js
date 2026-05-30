@@ -1911,6 +1911,15 @@ const [ratingsSummary, setRatingsSummary] = useState(null);
 const [activeTab, setActiveTab] = useState('posts');
 
   const [modal,      setModal]      = useState(null);
+const uploadOverlayRef = useRef(null);
+
+useEffect(() => {
+  const el = uploadOverlayRef.current;
+  if (!el) return;
+  const prevent = (e) => e.preventDefault();
+  el.addEventListener('touchmove', prevent, { passive: false });
+  return () => el.removeEventListener('touchmove', prevent);
+}, [uploadModalOpen]);
   const [fullscreen, setFullscreen] = useState(false);
   const [folderModal, setFolderModal] = useState(null);
 
@@ -2438,9 +2447,8 @@ const [activeTab, setActiveTab] = useState('posts');
 
         {/* ── UPLOAD MODAL ── */}
 {uploadModalOpen && (
-  <div className="modal-overlay" onClick={() => setUploadModalOpen(false)} style={{ zIndex:9999, alignItems:'flex-end', padding:0 }}
+  <div ref={uploadOverlayRef} className="modal-overlay" onClick={() => setUploadModalOpen(false)} style={{ zIndex:9999, alignItems:'flex-end', padding:0 }}
     onWheel={e => e.stopPropagation()}
-    onTouchMove={e => e.stopPropagation()}
   >
     <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth:'520px', width:'100%', maxHeight:'92dvh', height:'auto', display:'flex', flexDirection:'column', borderRadius:'16px 16px 0 0', margin:0 }}>
       
@@ -2462,7 +2470,7 @@ const [activeTab, setActiveTab] = useState('posts');
       </div>
 
       {/* Scrollable body */}
-      <div style={{ flex:1, overflowY:'auto', padding:'14px 16px', display:'flex', flexDirection:'column', gap:14 }}>
+      <div style={{ flex:1, overflowY:'auto', WebkitOverflowScrolling:'touch', padding:'14px 16px', display:'flex', flexDirection:'column', gap:14 }}>
 
         {/* File grid — max 2 rows visible, scrollable */}
         {quickItems.length > 0 && (
