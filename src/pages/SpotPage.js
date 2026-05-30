@@ -680,14 +680,31 @@ function CommentSection({ mediaId, currentUserId, onViewAll }) {
 
 // ── CaptionBlock ──────────────────────────────────────────────────────────────
 function CaptionBlock({ isAlbum, post }) {
-  const [expanded, setExpanded] = useState(false);
-  const LIMIT = 180;
+  const [visibleLen, setVisibleLen] = useState(180);
+  const CHUNK = 180;
+
+  const showMore = (total) => setVisibleLen(v => Math.min(v + CHUNK, total));
+  const collapse = () => setVisibleLen(CHUNK);
 
   if (isAlbum) {
+    const story = post.story || '';
+    const hasMore = visibleLen < story.length;
+    const isExpanded = visibleLen >= story.length && story.length > CHUNK;
     return (
       <div className="px-4 pb-2.5" style={{ fontSize: '0.9rem', color: 'rgba(0,0,0,0.68)', lineHeight: 1.65, wordBreak: 'break-word' }}>
         <strong style={{ fontFamily: "'DM Serif Display',serif", color: '#111', fontSize: '0.95rem' }}>{post.name}</strong>
-        {post.story && <><br/><span style={{ fontSize: '0.84rem', color: 'rgba(0,0,0,0.5)' }}>{post.story}</span></>}
+        {story && (
+          <><br/>
+          <span style={{ fontSize: '0.84rem', color: 'rgba(0,0,0,0.5)', whiteSpace: 'pre-wrap' }}>
+            {story.slice(0, visibleLen).trimEnd()}
+            {hasMore && (
+              <>{' … '}<span onClick={() => showMore(story.length)} className="font-bold cursor-pointer" style={{ color: '#111', fontSize: '0.82rem' }}>See more</span></>
+            )}
+            {isExpanded && (
+              <> <span onClick={collapse} className="font-bold cursor-pointer" style={{ color: '#111', fontSize: '0.82rem' }}>See less</span></>
+            )}
+          </span></>
+        )}
       </div>
     );
   }
@@ -701,17 +718,16 @@ function CaptionBlock({ isAlbum, post }) {
     );
   }
 
-  const isLong = caption.length > LIMIT;
-  const displayed = isLong && !expanded ? caption.slice(0, LIMIT).trimEnd() : caption;
-
+  const hasMore = visibleLen < caption.length;
+  const isExpanded = visibleLen >= caption.length && caption.length > CHUNK;
   return (
     <div className="px-4 pb-2.5" style={{ fontSize: '0.9rem', color: 'rgba(0,0,0,0.68)', lineHeight: 1.75, wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
-      {displayed}
-      {isLong && !expanded && (
-        <>{'… '}<span onClick={() => setExpanded(true)} className="font-bold cursor-pointer" style={{ color: '#111', fontSize: '0.82rem' }}>See more</span></>
+      {caption.slice(0, visibleLen).trimEnd()}
+      {hasMore && (
+        <>{' … '}<span onClick={() => showMore(caption.length)} className="font-bold cursor-pointer" style={{ color: '#111', fontSize: '0.82rem' }}>See more</span></>
       )}
-      {isLong && expanded && (
-        <>{' '}<span onClick={() => setExpanded(false)} className="font-bold cursor-pointer" style={{ color: '#111', fontSize: '0.82rem' }}>See less</span></>
+      {isExpanded && (
+        <> <span onClick={collapse} className="font-bold cursor-pointer" style={{ color: '#111', fontSize: '0.82rem' }}>See less</span></>
       )}
     </div>
   );
