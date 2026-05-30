@@ -60,7 +60,7 @@ const css = `
     box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
   }
   .cv-input::placeholder { color: rgba(0,0,0,0.28); }
-  input[type="date"] { width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; -webkit-appearance: none; appearance: none; }
+  input[type="date"] { width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; }
 
   .media-thumb {
     position: relative; overflow: hidden;
@@ -926,12 +926,12 @@ function AlbumGrid({ media, baseUrl, onImageClick }) {
   return (
     <div>
       <div
-        data-swipe-protected
-        style={{ background: '#f0f0ee', userSelect: 'none', height: 260, position: 'relative', overflow: 'hidden' }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
+  data-swipe-protected
+  style={{ background: '#f0f0ee', userSelect: 'none', height: 260, position: 'relative', overflow: 'hidden', touchAction:'pan-y' }}
+  onTouchStart={handleTouchStart}
+  onTouchMove={handleTouchMove}
+  onTouchEnd={handleTouchEnd}
+>
         <div style={{
           display: 'flex',
           width: `${media.length * 100}%`,
@@ -1018,14 +1018,14 @@ function AdminSingleImageViewer({ src, caption, onImageClick }) {
 
   return (
     <div
-      data-swipe-protected
-      className="overflow-hidden cursor-zoom-in"
-      style={{ maxHeight:460, background:'#f0f0ee' }}
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
-      onClick={() => { if (!movedRef.current) onImageClick(); }}
-    >
+  data-swipe-protected
+  className="overflow-hidden cursor-zoom-in"
+  style={{ maxHeight:460, background:'#f0f0ee', touchAction:'pan-y' }}
+  onTouchStart={onTouchStart}
+  onTouchMove={onTouchMove}
+  onTouchEnd={onTouchEnd}
+  onClick={() => { if (!movedRef.current) onImageClick(); }}
+>
       <img
         src={src} alt={caption} draggable={false}
         className="w-full block object-cover transition-transform duration-300"
@@ -1672,8 +1672,8 @@ function MemberCard({ m, baseUrl, userId, spotSlug, onReload, onViewDetail }) {
                 <div>
                   <label className="block mb-1.5" style={{ fontSize:'0.62rem', fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'rgba(0,0,0,0.35)' }}>Birthday</label>
                   <input type="date" value={editBirthday} onChange={e => setEditBirthday(e.target.value)} className="w-full outline-none bg-white"
-                    style={{ border:'1.5px solid rgba(0,0,0,0.12)', borderRadius:7, padding:'9px 12px', fontSize:'0.875rem', fontFamily:"'DM Sans',sans-serif", color:'#111' }}
-                  />
+  style={{ border:'1.5px solid rgba(0,0,0,0.12)', borderRadius:7, padding:'9px 12px', fontSize:'0.875rem', fontFamily:"'DM Sans',sans-serif", color:'#111', display:'block' }}
+/>
                 </div>
               </div>
 
@@ -1852,8 +1852,8 @@ function AuthorsPanel({ members, userId, spotSlug, baseUrl, onReload }) {
                 <div>
                   <label className="block mb-1.5" style={{ fontSize:'0.62rem', fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'rgba(0,0,0,0.35)' }}>Birthday</label>
                   <input type="date" value={newBirthday} onChange={e => setNewBirthday(e.target.value)} className="w-full outline-none bg-white"
-                    style={{ border:'1.5px solid rgba(0,0,0,0.12)', borderRadius:7, padding:'9px 12px', fontSize:'0.875rem', fontFamily:"'DM Sans',sans-serif", color:'#111' }}
-                  />
+  style={{ border:'1.5px solid rgba(0,0,0,0.12)', borderRadius:7, padding:'9px 12px', fontSize:'0.875rem', fontFamily:"'DM Sans',sans-serif", color:'#111', display:'block' }}
+/>
                 </div>
               </div>
 
