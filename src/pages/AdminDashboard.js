@@ -1435,11 +1435,13 @@ function MemberCard({ m, baseUrl, userId, spotSlug, onReload, onViewDetail }) {
 
   React.useEffect(() => {
     if (!editModalOpen) return;
+    modalLock();
     const prev = { overflow: document.body.style.overflow, position: document.body.style.position, width: document.body.style.width };
     document.body.style.overflow = 'hidden';
     document.body.style.position = 'fixed';
     document.body.style.width = '100%';
     return () => {
+      modalUnlock();
       document.body.style.overflow = prev.overflow;
       document.body.style.position = prev.position;
       document.body.style.width = prev.width;
@@ -1705,11 +1707,13 @@ function AuthorsPanel({ members, userId, spotSlug, baseUrl, onReload }) {
 
   React.useEffect(() => {
     if (!adding) return;
+    modalLock();
     const prev = { overflow: document.body.style.overflow, position: document.body.style.position, width: document.body.style.width };
     document.body.style.overflow = 'hidden';
     document.body.style.position = 'fixed';
     document.body.style.width = '100%';
     return () => {
+      modalUnlock();
       document.body.style.overflow = prev.overflow;
       document.body.style.position = prev.position;
       document.body.style.width = prev.width;
@@ -2075,6 +2079,11 @@ function AdminLightbox({ lightbox, setLightbox }) {
 // ── Swipeable Tabs ────────────────────────────────────────────────────────────
 const AD_TAB_KEYS = ['posts', 'authors', 'ratings'];
 
+// Global modal-open counter — incremented when any portal modal opens, decremented on close
+const _modalDepth = { value: 0 };
+function modalLock()   { _modalDepth.value++; }
+function modalUnlock() { _modalDepth.value = Math.max(0, _modalDepth.value - 1); }
+
 function useAdminSwipeTabs(activeTab, setActiveTab) {
   const ref = useRef(null);
   const startXRef = useRef(null);
@@ -2084,14 +2093,8 @@ function useAdminSwipeTabs(activeTab, setActiveTab) {
     const el = ref.current;
     if (!el) return;
 
-    function isModalOpen() {
-      return !!document.querySelector(
-        '.fixed.inset-0[style*="z-index: 9999"], .fixed.inset-0[style*="zIndex: 9999"], [style*="z-index:9999"], [style*="z-index: 9999"]'
-      );
-    }
-
     function onTouchStart(e) {
-      if (isModalOpen()) { startXRef.current = null; return; }
+      if (_modalDepth.value > 0) { startXRef.current = null; return; }
       if (e.target.closest('[data-swipe-protected]')) { startXRef.current = null; return; }
       startXRef.current = e.touches[0].clientX;
       startYRef.current = e.touches[0].clientY;
