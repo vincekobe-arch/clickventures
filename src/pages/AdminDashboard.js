@@ -1914,13 +1914,44 @@ const [activeTab, setActiveTab] = useState('posts');
 const uploadOverlayRef = useRef(null);
 
 useEffect(() => {
-  const el = uploadOverlayRef.current;
-  if (!el) return;
+  if (!uploadModalOpen) return;
+
   const prevent = (e) => {
+    const el = uploadOverlayRef.current;
+    if (!el) return;
     if (!e.target.closest('[data-scrollable]')) e.preventDefault();
   };
-  el.addEventListener('touchmove', prevent, { passive: false });
-  return () => el.removeEventListener('touchmove', prevent);
+
+  const lockBody = () => {
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+  };
+
+  const unlockBody = () => {
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.width = '';
+  };
+
+  const onFocusIn = () => lockBody();
+  const onFocusOut = () => {
+    setTimeout(() => {
+      if (uploadModalOpen) lockBody();
+    }, 100);
+  };
+
+  lockBody();
+  document.addEventListener('touchmove', prevent, { passive: false });
+  document.addEventListener('focusin', onFocusIn);
+  document.addEventListener('focusout', onFocusOut);
+
+  return () => {
+    unlockBody();
+    document.removeEventListener('touchmove', prevent);
+    document.removeEventListener('focusin', onFocusIn);
+    document.removeEventListener('focusout', onFocusOut);
+  };
 }, [uploadModalOpen]);
   const [fullscreen, setFullscreen] = useState(false);
   const [folderModal, setFolderModal] = useState(null);
