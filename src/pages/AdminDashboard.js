@@ -153,6 +153,11 @@ const css = `
     cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif;
   }
   .ad-back-btn:hover { border-color: rgba(255,255,255,0.9); color: #fff; }
+  .upload-modal-overlay { align-items: flex-end !important; }
+  @media (min-width: 769px) {
+    .upload-modal-overlay { align-items: center !important; padding: 32px !important; }
+    .upload-modal-box { border-radius: 16px !important; margin: auto !important; }
+  }
   @media (max-width: 768px) {
     .ad-main-grid { grid-template-columns: 1fr !important; }
     .ad-left-col { position: static !important; }
@@ -1881,13 +1886,7 @@ function AuthorsPanel({ members, userId, spotSlug, baseUrl, onReload }) {
 export default function AdminDashboard() {
   const user = JSON.parse(localStorage.getItem('cv_user') || 'null');
 
-  React.useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/eruda';
-    script.onload = () => window.eruda.init();
-    document.body.appendChild(script);
-    return () => document.body.removeChild(script);
-  }, []);
+  
 
   const [experience,   setExperience]   = useState('');
   const [expLastSaved, setExpLastSaved] = useState('');
@@ -2488,10 +2487,13 @@ useEffect(() => {
 
         {/* ── UPLOAD MODAL ── */}
 {uploadModalOpen && (
-  <div ref={uploadOverlayRef} className="modal-overlay" onClick={() => setUploadModalOpen(false)} style={{ zIndex:9999, alignItems:'flex-end', padding:0 }}
+  <div ref={uploadOverlayRef} className="modal-overlay upload-modal-overlay" onClick={() => setUploadModalOpen(false)}
+    style={{ zIndex:9999, padding:0 }}
     onWheel={e => e.stopPropagation()}
   >
-    <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth:'520px', width:'100%', maxHeight:'92dvh', height:'auto', display:'flex', flexDirection:'column', borderRadius:'16px 16px 0 0', margin:0 }}>
+    <div className="modal-box upload-modal-box" onClick={e => e.stopPropagation()}
+      style={{ maxWidth:'520px', width:'100%', maxHeight:'92dvh', height:'auto', display:'flex', flexDirection:'column', borderRadius:'16px 16px 0 0', margin:0 }}
+    >
       
       {/* Header */}
       <div className="modal-toolbar" style={{ padding:'14px 16px', flexShrink:0 }}>
