@@ -1543,11 +1543,25 @@ function Lightbox({ lightbox, setLightbox }) {
 
   const swipeStartX = useRef(null);
   const swipeStartY = useRef(null);
+  const overlayRef  = useRef(null);
+
+  useEffect(() => {
+    const el = overlayRef.current;
+    if (!el) return;
+    const prevent = (e) => e.preventDefault();
+    el.addEventListener('touchmove', prevent, { passive: false });
+    return () => el.removeEventListener('touchmove', prevent);
+  }, []);
 
   function onImgTouchStart(e) {
     e.stopPropagation();
     swipeStartX.current = e.touches[0].clientX;
     swipeStartY.current = e.touches[0].clientY;
+  }
+
+  function onImgTouchMove(e) {
+    e.stopPropagation();
+    e.preventDefault();
   }
 
   function onImgTouchEnd(e) {
@@ -1567,9 +1581,9 @@ function Lightbox({ lightbox, setLightbox }) {
   return (
     <div
       className="sp-lightbox-overlay"
+      ref={el => { overlayRef.current = el; el?.focus(); }}
       onClick={() => setLightbox(null)}
       tabIndex={0}
-      ref={el => el?.focus()}
       onKeyDown={e => {
         if (e.key === 'Escape') setLightbox(null);
         if (e.key === 'ArrowLeft')  { e.stopPropagation(); setIdx(ci - 1); }
@@ -1583,6 +1597,7 @@ function Lightbox({ lightbox, setLightbox }) {
         draggable={false}
         className="sp-lightbox-img"
         onTouchStart={onImgTouchStart}
+        onTouchMove={onImgTouchMove}
         onTouchEnd={onImgTouchEnd}
         onClick={onImgClick}
       />

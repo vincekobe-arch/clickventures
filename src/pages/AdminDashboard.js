@@ -1957,11 +1957,25 @@ function AdminLightbox({ lightbox, setLightbox }) {
 
   const swipeStartX = useRef(null);
   const swipeStartY = useRef(null);
+  const overlayRef  = useRef(null);
+
+  useEffect(() => {
+    const el = overlayRef.current;
+    if (!el) return;
+    const prevent = (e) => e.preventDefault();
+    el.addEventListener('touchmove', prevent, { passive: false });
+    return () => el.removeEventListener('touchmove', prevent);
+  }, []);
 
   function onImgTouchStart(e) {
     e.stopPropagation();
     swipeStartX.current = e.touches[0].clientX;
     swipeStartY.current = e.touches[0].clientY;
+  }
+
+  function onImgTouchMove(e) {
+    e.stopPropagation();
+    e.preventDefault();
   }
 
   function onImgTouchEnd(e) {
@@ -1979,9 +1993,10 @@ function AdminLightbox({ lightbox, setLightbox }) {
   return (
     <div
       className="fixed inset-0 flex flex-col items-center justify-center"
+      ref={el => { overlayRef.current = el; el?.focus(); }}
       style={{ background:'rgba(0,0,0,0.88)', zIndex:999, padding:32, backdropFilter:'blur(10px)', cursor:'zoom-out' }}
       onClick={() => setLightbox(null)}
-      tabIndex={0} ref={el => el?.focus()}
+      tabIndex={0}
       onKeyDown={e => {
         if (e.key === 'Escape') setLightbox(null);
         if (e.key === 'ArrowLeft')  { e.stopPropagation(); setIdx(ci - 1); }
@@ -1992,6 +2007,7 @@ function AdminLightbox({ lightbox, setLightbox }) {
         src={curSrc} alt={curCap} draggable={false}
         className="sp-lightbox-img"
         onTouchStart={onImgTouchStart}
+        onTouchMove={onImgTouchMove}
         onTouchEnd={onImgTouchEnd}
         onClick={onImgClick}
       />
