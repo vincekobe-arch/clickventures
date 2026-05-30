@@ -203,8 +203,8 @@ function Avatar({ name, size = 38 }) {
 }
 
 function CaptionBlock({ isAlbum, post }) {
-  const [visibleLen, setVisibleLen] = React.useState(180);
-  const CHUNK = 180;
+  const [visibleLen, setVisibleLen] = React.useState(300);
+  const CHUNK = 300;
 
   const showMore = (total) => setVisibleLen(v => Math.min(v + CHUNK, total));
   const collapse = () => setVisibleLen(CHUNK);
