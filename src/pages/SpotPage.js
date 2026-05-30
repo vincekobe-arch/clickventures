@@ -894,6 +894,57 @@ function AlbumGrid({ media, baseUrl, onImageClick }) {
   );
 }
 
+// ── SingleImageViewer ─────────────────────────────────────────────────────────
+function SingleImageViewer({ src, caption, onImageClick }) {
+  const startXRef = useRef(null);
+  const startYRef = useRef(null);
+  const movedRef  = useRef(false);
+
+  function onTouchStart(e) {
+    startXRef.current = e.touches[0].clientX;
+    startYRef.current = e.touches[0].clientY;
+    movedRef.current = false;
+  }
+  function onTouchMove(e) {
+    if (startXRef.current === null) return;
+    const dx = Math.abs(e.touches[0].clientX - startXRef.current);
+    const dy = Math.abs(e.touches[0].clientY - startYRef.current);
+    if (dx > 8 || dy > 8) movedRef.current = true;
+  }
+  function onTouchEnd(e) {
+    if (startXRef.current === null) return;
+    const dx = startXRef.current - e.changedTouches[0].clientX;
+    const dy = Math.abs(e.changedTouches[0].clientY - startYRef.current);
+    // tap = open lightbox; horizontal swipe = ignore (let parent scroll)
+    if (!movedRef.current) onImageClick();
+    startXRef.current = null;
+  }
+
+  return (
+    <div
+      data-swipe-protected
+      className="overflow-hidden cursor-zoom-in"
+      style={{ maxHeight: 460, background: '#f0f0ee' }}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+      onClick={(e) => {
+        // desktop click
+        if (!movedRef.current) onImageClick();
+      }}
+    >
+      <img
+        src={src}
+        alt={caption}
+        className="w-full block object-cover transition-transform duration-300"
+        draggable={false}
+        onMouseEnter={e => e.currentTarget.style.transform='scale(1.02)'}
+        onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}
+      />
+    </div>
+  );
+}
+
 // ── FeedPost ──────────────────────────────────────────────────────────────────
 function FeedPost({ post, baseUrl, currentUserId, onImageClick, onViewAll, animDelay }) {
   const isAlbum = post._type === 'album';
@@ -926,14 +977,11 @@ function FeedPost({ post, baseUrl, currentUserId, onImageClick, onViewAll, animD
 
       {/* Single image */}
       {!isAlbum && post.file_type === 'image' && (
-        <div data-swipe-protected onClick={() => onImageClick({ src: mediaUrl(post.file_path), caption: post.caption })}
-          className="overflow-hidden cursor-zoom-in" style={{ maxHeight: 460, background: '#f0f0ee' }}>
-          <img src={mediaUrl(post.file_path)} alt={post.caption}
-            className="w-full block object-cover transition-transform duration-300"
-            onMouseEnter={e => e.currentTarget.style.transform='scale(1.02)'}
-            onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}
-          />
-        </div>
+        <SingleImageViewer
+          src={mediaUrl(post.file_path)}
+          caption={post.caption}
+          onImageClick={() => onImageClick({ src: mediaUrl(post.file_path), caption: post.caption })}
+        />
       )}
 
       {/* Video */}
@@ -1479,6 +1527,210 @@ function useSwipeTabs(activeTab, setActiveTab) {
   return ref;
 }
 
+// ── Lightbox ──────────────────────────────────────────────────────────────────
+function Lightbox({ lightbox, setLightbox }) {
+  const all = lightbox.all
+    ? lightbox.all.filter(m => m.file_type === 'image')
+    : [{ file_path: null, src: lightbox.src, caption: lightbox.caption }];
+  const ci = lightbox.currentIdx ?? 0;
+  const cur = all[ci];
+  const curSrc = cur?.file_path ? cur.file_path : (cur?.src || lightbox.src);
+  const curCap = cur?.caption || '';
+
+  const setIdx = (i) => {
+    resetZoom();
+    setLightbox({ ...lightbox, currentIdx: (i + all.length) % all.length });
+  };
+
+  // ── zoom/pan state ──
+  const [scale,   setScale]   = useState(1);
+  const [offsetX, setOffsetX] = useState(0);
+  const [offsetY, setOffsetY] = useState(0);
+  const isDragging  = useRef(false);
+  const lastTouch   = useRef(null);
+  const lastDist    = useRef(null);
+  const dragStart   = useRef({ x: 0, y: 0, ox: 0, oy: 0 });
+  const swipeStartX = useRef(null);
+  const swipeStartY = useRef(null);
+
+  function resetZoom() {
+    setScale(1); setOffsetX(0); setOffsetY(0);
+  }
+
+  // reset zoom on image change
+  useEffect(() => { resetZoom(); }, [ci]);
+
+  function clamp(val, min, max) { return Math.min(max, Math.max(min, val)); }
+
+  function onImgTouchStart(e) {
+    e.stopPropagation();
+    if (e.touches.length === 1) {
+      swipeStartX.current = e.touches[0].clientX;
+      swipeStartY.current = e.touches[0].clientY;
+      isDragging.current = true;
+      dragStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, ox: offsetX, oy: offsetY };
+      lastTouch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      lastDist.current = null;
+    } else if (e.touches.length === 2) {
+      swipeStartX.current = null;
+      lastDist.current = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+    }
+  }
+
+  function onImgTouchMove(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    if (e.touches.length === 2) {
+      // pinch zoom
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      if (lastDist.current) {
+        const delta = dist / lastDist.current;
+        setScale(s => clamp(s * delta, 1, 5));
+      }
+      lastDist.current = dist;
+    } else if (e.touches.length === 1 && isDragging.current) {
+      if (scale > 1) {
+        // pan when zoomed
+        const dx = e.touches[0].clientX - dragStart.current.x;
+        const dy = e.touches[0].clientY - dragStart.current.y;
+        setOffsetX(dragStart.current.ox + dx);
+        setOffsetY(dragStart.current.oy + dy);
+      }
+      lastTouch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+  }
+
+  function onImgTouchEnd(e) {
+    e.stopPropagation();
+    isDragging.current = false;
+    lastDist.current = null;
+    if (scale <= 1 && swipeStartX.current !== null && e.changedTouches.length === 1) {
+      const dx = swipeStartX.current - e.changedTouches[0].clientX;
+      const dy = Math.abs(e.changedTouches[0].clientY - swipeStartY.current);
+      if (Math.abs(dx) > 40 && Math.abs(dx) > dy && all.length > 1) {
+        setIdx(dx > 0 ? ci + 1 : ci - 1);
+      }
+    }
+    swipeStartX.current = null;
+  }
+
+  // double-tap to zoom
+  const lastTapRef = useRef(0);
+  function onImgDoubleTap(e) {
+    e.stopPropagation();
+    if (scale > 1) { resetZoom(); } else { setScale(2.5); }
+  }
+  function onImgClick(e) {
+    e.stopPropagation();
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) onImgDoubleTap(e);
+    lastTapRef.current = now;
+  }
+
+  // mouse wheel zoom
+  function onWheel(e) {
+    e.preventDefault();
+    setScale(s => clamp(s + (e.deltaY < 0 ? 0.15 : -0.15), 1, 5));
+    if (scale <= 1) { setOffsetX(0); setOffsetY(0); }
+  }
+
+  return (
+    <div
+      className="sp-lightbox-overlay"
+      onClick={() => { if (scale > 1) { resetZoom(); } else { setLightbox(null); } }}
+      tabIndex={0}
+      ref={el => el?.focus()}
+      onKeyDown={e => {
+        if (e.key === 'Escape') setLightbox(null);
+        if (e.key === 'ArrowLeft')  { e.stopPropagation(); setIdx(ci - 1); }
+        if (e.key === 'ArrowRight') { e.stopPropagation(); setIdx(ci + 1); }
+      }}
+      onWheel={onWheel}
+    >
+      {/* image wrapper */}
+      <div
+        style={{
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          maxWidth: '90vw',
+          maxHeight: '80vh',
+          overflow: 'hidden',
+          borderRadius: 8,
+          touchAction: 'none',
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        <img
+          src={curSrc}
+          alt={curCap}
+          draggable={false}
+          style={{
+            maxWidth: '90vw',
+            maxHeight: '80vh',
+            objectFit: 'contain',
+            borderRadius: 8,
+            animation: 'modalIn 0.28s cubic-bezier(0.34,1.56,0.64,1) forwards',
+            transform: `scale(${scale}) translate(${offsetX / scale}px, ${offsetY / scale}px)`,
+            transition: isDragging.current ? 'none' : 'transform 0.2s ease',
+            cursor: scale > 1 ? 'grab' : 'zoom-in',
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+          }}
+          onTouchStart={onImgTouchStart}
+          onTouchMove={onImgTouchMove}
+          onTouchEnd={onImgTouchEnd}
+          onClick={onImgClick}
+        />
+      </div>
+
+      {curCap && (
+        <div className="mt-4 text-center" style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.84rem', maxWidth: 520, lineHeight: 1.6 }}>{curCap}</div>
+      )}
+
+      {/* zoom reset hint */}
+      {scale > 1 && (
+        <div style={{ position: 'absolute', bottom: 64, left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.5)', borderRadius: 20, padding: '3px 12px', fontSize: '0.62rem', color: 'rgba(255,255,255,0.7)', fontWeight: 700, pointerEvents: 'none' }}>
+          {Math.round(scale * 100)}% · tap background or double-tap to reset
+        </div>
+      )}
+
+      {all.length > 1 && scale <= 1 && (
+        <>
+          <button onClick={e => { e.stopPropagation(); setIdx(ci - 1); }}
+            className="absolute flex items-center justify-center cursor-pointer transition-all duration-150"
+            style={{ left: 20, top: '50%', transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1.5px solid rgba(255,255,255,0.25)', color: '#fff' }}
+            onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.22)'}
+            onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.1)'}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button onClick={e => { e.stopPropagation(); setIdx(ci + 1); }}
+            className="absolute flex items-center justify-center cursor-pointer transition-all duration-150"
+            style={{ right: 20, top: '50%', transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1.5px solid rgba(255,255,255,0.25)', color: '#fff' }}
+            onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.22)'}
+            onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.1)'}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <div className="absolute" style={{ bottom: 24, left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.45)', borderRadius: 20, padding: '3px 12px', fontSize: '0.68rem', color: 'rgba(255,255,255,0.85)', fontWeight: 700 }}>
+            {ci + 1} / {all.length}
+          </div>
+        </>
+      )}
+
+      <button onClick={() => setLightbox(null)} className="absolute top-5 right-6 flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.1)', border: '1.5px solid rgba(255,255,255,0.2)', color: '#fff', width: 36, height: 36, borderRadius: '50%', fontSize: '1rem', cursor: 'pointer' }}>✕</button>
+    </div>
+  );
+}
+
 // ── SpotPage ──────────────────────────────────────────────────────────────────
 export default function SpotPage() {
   const { slug } = useParams();
@@ -1690,74 +1942,7 @@ const swipeTabRef = useSwipeTabs(activeTab, setActiveTab);
       </div>
 
       {/* ── LIGHTBOX ── */}
-      {lightbox && (() => {
-        const all = lightbox.all
-          ? lightbox.all.filter(m => m.file_type === 'image')
-          : [{ file_path: null, src: lightbox.src, caption: lightbox.caption }];
-        const ci = lightbox.currentIdx ?? 0;
-        const cur = all[ci];
-        const curSrc = cur?.file_path ? BASE + cur.file_path : (cur?.src || lightbox.src);
-        const curCap = cur?.caption || '';
-        const setIdx = (i) => setLightbox({ ...lightbox, currentIdx: (i + all.length) % all.length });
-
-        let lbTouchStartX = null;
-        let lbTouchStartY = null;
-
-        return (
-          <div className="sp-lightbox-overlay" onClick={() => setLightbox(null)}
-            tabIndex={0} ref={el => el?.focus()}
-            onKeyDown={e => { if (e.key === 'ArrowLeft') { e.stopPropagation(); setIdx(ci - 1); } if (e.key === 'ArrowRight') { e.stopPropagation(); setIdx(ci + 1); } }}
-            onTouchStart={e => { lbTouchStartX = e.touches[0].clientX; lbTouchStartY = e.touches[0].clientY; }}
-            onTouchEnd={e => {
-              if (lbTouchStartX === null) return;
-              const dx = lbTouchStartX - e.changedTouches[0].clientX;
-              const dy = Math.abs(e.changedTouches[0].clientY - lbTouchStartY);
-              if (Math.abs(dx) > 40 && Math.abs(dx) > dy && all.length > 1) {
-                e.stopPropagation();
-                setIdx(dx > 0 ? ci + 1 : ci - 1);
-              }
-              lbTouchStartX = null;
-            }}
-            onTouchMove={e => e.preventDefault()}
-          >
-            <img src={curSrc} alt={curCap} className="sp-lightbox-img"
-              onClick={e => e.stopPropagation()}
-              onTouchStart={e => e.stopPropagation()}
-              onTouchMove={e => { e.stopPropagation(); e.preventDefault(); }}
-              onTouchEnd={e => e.stopPropagation()}
-            />
-            {curCap && (
-              <div className="mt-4 text-center" style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.84rem', maxWidth: 520, lineHeight: 1.6 }}>{curCap}</div>
-            )}
-
-            {all.length > 1 && (
-              <>
-                <button onClick={e => { e.stopPropagation(); setIdx(ci - 1); }}
-                  className="absolute flex items-center justify-center cursor-pointer transition-all duration-150"
-                  style={{ left: 20, top: '50%', transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1.5px solid rgba(255,255,255,0.25)', color: '#fff' }}
-                  onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.22)'}
-                  onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.1)'}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-                </button>
-                <button onClick={e => { e.stopPropagation(); setIdx(ci + 1); }}
-                  className="absolute flex items-center justify-center cursor-pointer transition-all duration-150"
-                  style={{ right: 20, top: '50%', transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1.5px solid rgba(255,255,255,0.25)', color: '#fff' }}
-                  onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.22)'}
-                  onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.1)'}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-                </button>
-                <div className="absolute" style={{ bottom: 24, left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.45)', borderRadius: 20, padding: '3px 12px', fontSize: '0.68rem', color: 'rgba(255,255,255,0.85)', fontWeight: 700 }}>
-                  {ci + 1} / {all.length}
-                </div>
-              </>
-            )}
-
-            <button onClick={() => setLightbox(null)} className="absolute top-5 right-6 flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.1)', border: '1.5px solid rgba(255,255,255,0.2)', color: '#fff', width: 36, height: 36, borderRadius: '50%', fontSize: '1rem', cursor: 'pointer' }}>✕</button>
-          </div>
-        );
-      })()}
+      {lightbox && <Lightbox lightbox={lightbox} setLightbox={setLightbox} />}
 
       {/* ── All Comments Modal ── */}
       {commentModal && (
