@@ -60,7 +60,7 @@ const css = `
     box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
   }
   .cv-input::placeholder { color: rgba(0,0,0,0.28); }
-  input[type="date"] { width: 100%; box-sizing: border-box; }
+  input[type="date"] { width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; -webkit-appearance: none; appearance: none; }
 
   .media-thumb {
     position: relative; overflow: hidden;
