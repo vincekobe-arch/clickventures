@@ -1953,7 +1953,7 @@ function AdminLightbox({ lightbox, setLightbox }) {
   const curSrc = cur?.file_path ? mediaUrl(cur.file_path) : (cur?.src || lightbox.src);
   const curCap = cur?.caption || '';
 
-  const setIdx = (i) => { resetZoom(); setLightbox({ ...lightbox, currentIdx: (i + all.length) % all.length }); };
+  const setIdx = (i) => { setLightbox({ ...lightbox, currentIdx: (i + all.length) % all.length }); };
 
   const swipeStartX = useRef(null);
   const swipeStartY = useRef(null);

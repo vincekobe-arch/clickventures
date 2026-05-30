@@ -1538,7 +1538,6 @@ function Lightbox({ lightbox, setLightbox }) {
   const curCap = cur?.caption || '';
 
   const setIdx = (i) => {
-    resetZoom();
     setLightbox({ ...lightbox, currentIdx: (i + all.length) % all.length });
   };
 
