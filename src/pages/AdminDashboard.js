@@ -172,6 +172,7 @@ const css = `
     .ad-modal-inner { padding: 4px !important; }
     .ad-form-grid { grid-template-columns: 1fr !important; }
     .ad-portal-overlay { padding: 72px 12px 12px !important; align-items: flex-start !important; }
+    .ad-swipe-hint { display: block !important; }
   }
 `;
 
@@ -1901,6 +1902,45 @@ function AuthorsPanel({ members, userId, spotSlug, baseUrl, onReload }) {
   );
 }
 
+// ── Swipeable Tabs ────────────────────────────────────────────────────────────
+const AD_TAB_KEYS = ['posts', 'authors', 'ratings'];
+
+function useAdminSwipeTabs(activeTab, setActiveTab) {
+  const ref = useRef(null);
+  const startXRef = useRef(null);
+  const startYRef = useRef(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    function onTouchStart(e) {
+      startXRef.current = e.touches[0].clientX;
+      startYRef.current = e.touches[0].clientY;
+    }
+    function onTouchEnd(e) {
+      if (startXRef.current === null) return;
+      const dx = startXRef.current - e.changedTouches[0].clientX;
+      const dy = Math.abs(e.changedTouches[0].clientY - startYRef.current);
+      if (Math.abs(dx) > 50 && Math.abs(dx) > dy) {
+        const idx = AD_TAB_KEYS.indexOf(activeTab);
+        if (dx > 0 && idx < AD_TAB_KEYS.length - 1) setActiveTab(AD_TAB_KEYS[idx + 1]);
+        if (dx < 0 && idx > 0) setActiveTab(AD_TAB_KEYS[idx - 1]);
+      }
+      startXRef.current = null;
+    }
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [activeTab, setActiveTab]);
+
+  return ref;
+}
+
 // ── AdminDashboard (main) ─────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const user = JSON.parse(localStorage.getItem('cv_user') || 'null');
@@ -1935,6 +1975,7 @@ export default function AdminDashboard() {
 const [ratings,  setRatings]  = useState([]);
 const [ratingsSummary, setRatingsSummary] = useState(null);
 const [activeTab, setActiveTab] = useState('posts');
+const swipeTabRef = useAdminSwipeTabs(activeTab, setActiveTab);
 
   const [modal,      setModal]      = useState(null);
 const uploadOverlayRef = useRef(null);
@@ -2239,7 +2280,7 @@ useEffect(() => {
             </div>
 
             {/* ── RIGHT: TABS ── */}
-            <div className="flex flex-col gap-4" style={{ animation:'fadeUp 0.6s ease 0.28s forwards', opacity:0 }}>
+            <div ref={swipeTabRef} className="flex flex-col gap-4" style={{ animation:'fadeUp 0.6s ease 0.28s forwards', opacity:0 }}>
 
               {/* Tab switcher */}
               <div className="flex gap-0 bg-white p-1 rounded-xl" style={{ border:'1px solid rgba(0,0,0,0.08)', boxShadow:'0 2px 8px rgba(0,0,0,0.04)' }}>
@@ -2248,12 +2289,15 @@ useEffect(() => {
                   { key:'authors', label:'Authors', icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
                   { key:'ratings', label:'Ratings', icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> },
                 ].map(t => (
-
                   <button key={t.key} onClick={() => setActiveTab(t.key)}
                     className="flex-1 flex items-center justify-center gap-1.5 border-none rounded-lg font-black uppercase tracking-wider cursor-pointer transition-all duration-200"
                     style={{ background: activeTab === t.key ? '#111' : 'transparent', color: activeTab === t.key ? '#fff' : 'rgba(0,0,0,0.4)', padding:'10px 0', fontSize:'0.72rem', letterSpacing:'0.1em', fontFamily:"'DM Sans',sans-serif" }}
                   >{t.icon}<span className="ad-tab-label">{t.label}</span></button>
                 ))}
+              </div>
+              {/* Swipe hint — mobile only */}
+              <div className="ad-swipe-hint" style={{ textAlign:'center', fontSize:'0.6rem', color:'rgba(0,0,0,0.22)', letterSpacing:'0.1em', marginTop:-8, display:'none' }}>
+                ← swipe to change tabs →
               </div>
 
               {/* Posts tab */}

@@ -71,6 +71,7 @@ const css = `
     .sp-content-wrap { padding-left: 20px !important; padding-right: 20px !important; }
     .sp-tab-label { display: none !important; }
     .sp-members-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .sp-swipe-hint { display: block !important; }
   }`;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -597,6 +598,8 @@ function CommentSection({ mediaId, currentUserId, onViewAll }) {
     API.get(`/comments.php?media_id=${mediaId}`)
       .then(r => { setComments(r.data); setCount(r.data.length); setLoaded(true); });
   }, [mediaId]);
+
+  
 
   const previewComments = [...comments].slice(-3);
 
@@ -1431,6 +1434,45 @@ function ExperienceText({ text }) {
     </div>
   );
 }
+// ── Swipeable Tabs ────────────────────────────────────────────────────────────
+const TAB_KEYS = ['posts', 'authors', 'ratings'];
+
+function useSwipeTabs(activeTab, setActiveTab) {
+  const ref = useRef(null);
+  const startXRef = useRef(null);
+  const startYRef = useRef(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    function onTouchStart(e) {
+      startXRef.current = e.touches[0].clientX;
+      startYRef.current = e.touches[0].clientY;
+    }
+    function onTouchEnd(e) {
+      if (startXRef.current === null) return;
+      const dx = startXRef.current - e.changedTouches[0].clientX;
+      const dy = Math.abs(e.changedTouches[0].clientY - startYRef.current);
+      if (Math.abs(dx) > 50 && Math.abs(dx) > dy) {
+        const idx = TAB_KEYS.indexOf(activeTab);
+        if (dx > 0 && idx < TAB_KEYS.length - 1) setActiveTab(TAB_KEYS[idx + 1]);
+        if (dx < 0 && idx > 0) setActiveTab(TAB_KEYS[idx - 1]);
+      }
+      startXRef.current = null;
+    }
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [activeTab, setActiveTab]);
+
+  return ref;
+}
+
 // ── SpotPage ──────────────────────────────────────────────────────────────────
 export default function SpotPage() {
   const { slug } = useParams();
@@ -1445,6 +1487,7 @@ export default function SpotPage() {
   const [feed,        setFeed]        = useState([]);
   const [members,     setMembers]     = useState([]);
   const [activeTab,   setActiveTab]   = useState('posts');
+const swipeTabRef = useSwipeTabs(activeTab, setActiveTab);
 
   const currentUser   = JSON.parse(localStorage.getItem('cv_user') || 'null');
   const currentUserId = currentUser?.id ?? null;
@@ -1567,7 +1610,7 @@ export default function SpotPage() {
           </div>
 
           {/* ── RIGHT: TABS ── */}
-          <div className="flex flex-col gap-4" style={{ animation: 'fadeUp 0.6s ease 0.38s forwards', opacity: 0 }}>
+          <div ref={swipeTabRef} className="flex flex-col gap-4" style={{ animation: 'fadeUp 0.6s ease 0.38s forwards', opacity: 0 }}>
 
             {/* Tab switcher */}
             <div className="flex gap-0 bg-white p-1 rounded-xl" style={{ border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
@@ -1581,6 +1624,10 @@ export default function SpotPage() {
                   style={{ background: activeTab === t.key ? '#111' : 'transparent', color: activeTab === t.key ? '#fff' : 'rgba(0,0,0,0.4)', padding: '10px 0', fontSize: '0.72rem', letterSpacing: '0.1em', fontFamily: "'DM Sans',sans-serif" }}
                 >{t.icon}<span className="sp-tab-label">{t.label}</span></button>
               ))}
+            </div>
+            {/* Swipe hint — mobile only */}
+            <div className="sp-swipe-hint" style={{ textAlign: 'center', fontSize: '0.6rem', color: 'rgba(0,0,0,0.22)', letterSpacing: '0.1em', marginTop: -8, display: 'none' }}>
+              ← swipe to change tabs →
             </div>
 
             {/* Posts tab */}
