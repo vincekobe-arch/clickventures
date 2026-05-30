@@ -2438,11 +2438,11 @@ const [activeTab, setActiveTab] = useState('posts');
 
         {/* ── UPLOAD MODAL ── */}
 {uploadModalOpen && (
-  <div className="modal-overlay" onClick={() => setUploadModalOpen(false)} style={{ zIndex:9999 }}
+  <div className="modal-overlay" onClick={() => setUploadModalOpen(false)} style={{ zIndex:9999, alignItems:'flex-end', padding:0 }}
     onWheel={e => e.stopPropagation()}
     onTouchMove={e => e.stopPropagation()}
   >
-    <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth:'520px', maxHeight:'92vh', height:'auto', display:'flex', flexDirection:'column' }}>
+    <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth:'520px', width:'100%', maxHeight:'92dvh', height:'auto', display:'flex', flexDirection:'column', borderRadius:'16px 16px 0 0', margin:0 }}>
       
       {/* Header */}
       <div className="modal-toolbar" style={{ padding:'14px 16px', flexShrink:0 }}>
