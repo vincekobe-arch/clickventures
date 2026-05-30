@@ -62,8 +62,9 @@ export default function Home() {
   const [stripDragOffset, setStripDragOffset] = useState(0);
   const [stripIsDragging, setStripIsDragging] = useState(false);
   const stripDragStartX = useRef(null);
-  const stripDragStartY = useRef(null);
+const stripDragStartY = useRef(null);
 const stripDragTargetIdx = useRef(null);
+const currentRef = useRef(current);
 
   const [aboutRef, aboutInView] = useInView();
   const [spotsRef, spotsInView] = useInView();
@@ -88,18 +89,17 @@ const stripDragTargetIdx = useRef(null);
   };
 
   useEffect(() => { startAuto(); return () => clearInterval(intervalRef.current); }, []);
-  useEffect(() => { const t = setTimeout(() => setVisible(true), 100); return () => clearTimeout(t); }, []);
+useEffect(() => { const t = setTimeout(() => setVisible(true), 100); return () => clearTimeout(t); }, []);
+useEffect(() => { currentRef.current = current; }, [current]);
 
   useEffect(() => {
     const strip = stripDragRef.current;
     if (!strip) return;
 
-    let activeCurrent = current;
-
     function onTouchStart(e) {
       stripDragStartX.current = e.touches[0].clientX;
       stripDragStartY.current = e.touches[0].clientY;
-      activeCurrent = current;
+      stripDragTargetIdx.current = currentRef.current;
       setStripIsDragging(true);
       setStripDragOffset(0);
       clearInterval(intervalRef.current);
@@ -111,10 +111,10 @@ const stripDragTargetIdx = useRef(null);
       const absDiffY = Math.abs(e.touches[0].clientY - (stripDragStartY.current ?? e.touches[0].clientY));
       if (absDiffX > absDiffY) {
         e.preventDefault();
+        const dragStart = stripDragTargetIdx.current ?? currentRef.current;
         const steps = Math.round(-diff / 160);
-        const newIdx = Math.max(0, Math.min(spots.length - 1, activeCurrent + steps));
-        if (newIdx !== stripDragTargetIdx.current) {
-          stripDragTargetIdx.current = newIdx;
+        const newIdx = Math.max(0, Math.min(spots.length - 1, dragStart + steps));
+        if (newIdx !== currentRef.current) {
           setFade(false);
           setTimeout(() => setFade(true), 350);
           setCurrent(newIdx);
@@ -133,7 +133,7 @@ const stripDragTargetIdx = useRef(null);
 
     function onMouseDown(e) {
       stripDragStartX.current = e.clientX;
-      activeCurrent = current;
+      stripDragTargetIdx.current = currentRef.current;
       setStripIsDragging(true);
       setStripDragOffset(0);
       clearInterval(intervalRef.current);
@@ -141,10 +141,10 @@ const stripDragTargetIdx = useRef(null);
     function onMouseMove(e) {
       if (stripDragStartX.current === null) return;
       const diff = e.clientX - stripDragStartX.current;
+      const dragStart = stripDragTargetIdx.current ?? currentRef.current;
       const steps = Math.round(-diff / 160);
-      const newIdx = Math.max(0, Math.min(spots.length - 1, activeCurrent + steps));
-      if (newIdx !== stripDragTargetIdx.current) {
-        stripDragTargetIdx.current = newIdx;
+      const newIdx = Math.max(0, Math.min(spots.length - 1, dragStart + steps));
+      if (newIdx !== currentRef.current) {
         setFade(false);
         setTimeout(() => setFade(true), 350);
         setCurrent(newIdx);
