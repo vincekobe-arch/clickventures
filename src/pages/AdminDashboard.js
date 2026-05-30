@@ -1881,6 +1881,14 @@ function AuthorsPanel({ members, userId, spotSlug, baseUrl, onReload }) {
 export default function AdminDashboard() {
   const user = JSON.parse(localStorage.getItem('cv_user') || 'null');
 
+  React.useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/eruda';
+    script.onload = () => window.eruda.init();
+    document.body.appendChild(script);
+    return () => document.body.removeChild(script);
+  }, []);
+
   const [experience,   setExperience]   = useState('');
   const [expLastSaved, setExpLastSaved] = useState('');
   const [expMsg,       setExpMsg]       = useState('');
