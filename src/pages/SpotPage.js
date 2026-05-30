@@ -820,6 +820,7 @@ function AlbumGrid({ media, baseUrl, onImageClick }) {
   return (
     <div>
       <div
+        data-swipe-protected
         style={{ background: '#f0f0ee', userSelect: 'none', height: 260, position: 'relative', overflow: 'hidden' }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -925,7 +926,7 @@ function FeedPost({ post, baseUrl, currentUserId, onImageClick, onViewAll, animD
 
       {/* Single image */}
       {!isAlbum && post.file_type === 'image' && (
-        <div onClick={() => onImageClick({ src: mediaUrl(post.file_path), caption: post.caption })}
+        <div data-swipe-protected onClick={() => onImageClick({ src: mediaUrl(post.file_path), caption: post.caption })}
           className="overflow-hidden cursor-zoom-in" style={{ maxHeight: 460, background: '#f0f0ee' }}>
           <img src={mediaUrl(post.file_path)} alt={post.caption}
             className="w-full block object-cover transition-transform duration-300"
@@ -937,7 +938,7 @@ function FeedPost({ post, baseUrl, currentUserId, onImageClick, onViewAll, animD
 
       {/* Video */}
       {!isAlbum && post.file_type === 'video' && (
-        <div className="bg-black">
+        <div data-swipe-protected className="bg-black">
           <video src={mediaUrl(post.file_path)} controls className="w-full block" style={{ maxHeight: 420 }}/>
         </div>
       )}
@@ -1447,6 +1448,11 @@ function useSwipeTabs(activeTab, setActiveTab) {
     if (!el) return;
 
     function onTouchStart(e) {
+      // ignore if touch started inside a swipe-protected element
+      if (e.target.closest('[data-swipe-protected]')) {
+        startXRef.current = null;
+        return;
+      }
       startXRef.current = e.touches[0].clientX;
       startYRef.current = e.touches[0].clientY;
     }
@@ -1694,10 +1700,24 @@ const swipeTabRef = useSwipeTabs(activeTab, setActiveTab);
         const curCap = cur?.caption || '';
         const setIdx = (i) => setLightbox({ ...lightbox, currentIdx: (i + all.length) % all.length });
 
+        let lbTouchStartX = null;
+        let lbTouchStartY = null;
+
         return (
           <div className="sp-lightbox-overlay" onClick={() => setLightbox(null)}
             tabIndex={0} ref={el => el?.focus()}
             onKeyDown={e => { if (e.key === 'ArrowLeft') { e.stopPropagation(); setIdx(ci - 1); } if (e.key === 'ArrowRight') { e.stopPropagation(); setIdx(ci + 1); } }}
+            onTouchStart={e => { lbTouchStartX = e.touches[0].clientX; lbTouchStartY = e.touches[0].clientY; }}
+            onTouchEnd={e => {
+              if (lbTouchStartX === null) return;
+              const dx = lbTouchStartX - e.changedTouches[0].clientX;
+              const dy = Math.abs(e.changedTouches[0].clientY - lbTouchStartY);
+              if (Math.abs(dx) > 40 && Math.abs(dx) > dy && all.length > 1) {
+                e.stopPropagation();
+                setIdx(dx > 0 ? ci + 1 : ci - 1);
+              }
+              lbTouchStartX = null;
+            }}
             onTouchMove={e => e.preventDefault()}
           >
             <img src={curSrc} alt={curCap} className="sp-lightbox-img"
