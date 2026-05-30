@@ -1547,14 +1547,20 @@ function Lightbox({ lightbox, setLightbox }) {
   const [offsetX, setOffsetX] = useState(0);
   const [offsetY, setOffsetY] = useState(0);
   const isDragging  = useRef(false);
-  const lastTouch   = useRef(null);
   const lastDist    = useRef(null);
   const dragStart   = useRef({ x: 0, y: 0, ox: 0, oy: 0 });
   const swipeStartX = useRef(null);
   const swipeStartY = useRef(null);
+  const scaleRef    = useRef(1);
+  const offsetXRef  = useRef(0);
+  const offsetYRef  = useRef(0);
+
+  function setScaleSync(v)   { scaleRef.current = v;   setScale(v); }
+  function setOffsetXSync(v) { offsetXRef.current = v; setOffsetX(v); }
+  function setOffsetYSync(v) { offsetYRef.current = v; setOffsetY(v); }
 
   function resetZoom() {
-    setScale(1); setOffsetX(0); setOffsetY(0);
+    setScaleSync(1); setOffsetXSync(0); setOffsetYSync(0);
   }
 
   // reset zoom on image change
@@ -1568,11 +1574,11 @@ function Lightbox({ lightbox, setLightbox }) {
       swipeStartX.current = e.touches[0].clientX;
       swipeStartY.current = e.touches[0].clientY;
       isDragging.current = true;
-      dragStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, ox: offsetX, oy: offsetY };
-      lastTouch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      dragStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, ox: offsetXRef.current, oy: offsetYRef.current };
       lastDist.current = null;
     } else if (e.touches.length === 2) {
       swipeStartX.current = null;
+      isDragging.current = false;
       lastDist.current = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
@@ -1584,25 +1590,21 @@ function Lightbox({ lightbox, setLightbox }) {
     e.stopPropagation();
     e.preventDefault();
     if (e.touches.length === 2) {
-      // pinch zoom
       const dist = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
       );
       if (lastDist.current) {
         const delta = dist / lastDist.current;
-        setScale(s => clamp(s * delta, 1, 5));
+        const next = clamp(scaleRef.current * delta, 1, 5);
+        setScaleSync(next);
       }
       lastDist.current = dist;
-    } else if (e.touches.length === 1 && isDragging.current) {
-      if (scale > 1) {
-        // pan when zoomed
-        const dx = e.touches[0].clientX - dragStart.current.x;
-        const dy = e.touches[0].clientY - dragStart.current.y;
-        setOffsetX(dragStart.current.ox + dx);
-        setOffsetY(dragStart.current.oy + dy);
-      }
-      lastTouch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    } else if (e.touches.length === 1 && isDragging.current && scaleRef.current > 1) {
+      const dx = e.touches[0].clientX - dragStart.current.x;
+      const dy = e.touches[0].clientY - dragStart.current.y;
+      setOffsetXSync(dragStart.current.ox + dx);
+      setOffsetYSync(dragStart.current.oy + dy);
     }
   }
 
@@ -1610,7 +1612,7 @@ function Lightbox({ lightbox, setLightbox }) {
     e.stopPropagation();
     isDragging.current = false;
     lastDist.current = null;
-    if (scale <= 1 && swipeStartX.current !== null && e.changedTouches.length === 1) {
+    if (scaleRef.current <= 1 && swipeStartX.current !== null && e.changedTouches.length === 1) {
       const dx = swipeStartX.current - e.changedTouches[0].clientX;
       const dy = Math.abs(e.changedTouches[0].clientY - swipeStartY.current);
       if (Math.abs(dx) > 40 && Math.abs(dx) > dy && all.length > 1) {
@@ -1695,12 +1697,7 @@ function Lightbox({ lightbox, setLightbox }) {
         <div className="mt-4 text-center" style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.84rem', maxWidth: 520, lineHeight: 1.6 }}>{curCap}</div>
       )}
 
-      {/* zoom reset hint */}
-      {scale > 1 && (
-        <div style={{ position: 'absolute', bottom: 64, left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.5)', borderRadius: 20, padding: '3px 12px', fontSize: '0.62rem', color: 'rgba(255,255,255,0.7)', fontWeight: 700, pointerEvents: 'none' }}>
-          {Math.round(scale * 100)}% · tap background or double-tap to reset
-        </div>
-      )}
+      
 
       {all.length > 1 && scale <= 1 && (
         <>
