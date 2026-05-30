@@ -1585,7 +1585,7 @@ function MemberCard({ m, baseUrl, userId, spotSlug, onReload, onViewDetail }) {
   className="fixed inset-0 flex items-center justify-center"
   style={{ background:'rgba(0,0,0,0.55)', backdropFilter:'blur(8px)', animation:'fadeIn 0.2s ease forwards', zIndex:9999, padding:'24px' }}>
     <div onClick={e => e.stopPropagation()} className="bg-white w-full flex flex-col overflow-hidden"
-      style={{ borderRadius:16, maxWidth:520, maxHeight:'88vh', boxShadow:'0 24px 80px rgba(0,0,0,0.18)', animation:'modalIn 0.28s cubic-bezier(0.34,1.56,0.64,1) forwards' }}>
+      style={{ borderRadius:16, maxWidth:520, maxHeight:'88vh', boxShadow:'0 24px 80px rgba(0,0,0,0.18)', animation:'modalIn 0.28s cubic-bezier(0.34,1.56,0.64,1) forwards', touchAction:'pan-y' }}>
 
             <div className="flex items-center justify-between flex-shrink-0 px-6 py-4" style={{ borderBottom:'1px solid rgba(0,0,0,0.07)' }}>
               <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:'1rem', color:'#111' }}>Edit Member</div>
@@ -1770,7 +1770,7 @@ function AuthorsPanel({ members, userId, spotSlug, baseUrl, onReload }) {
   <div onClick={() => { setAdding(false); resetForm(); }} className="fixed inset-0 flex items-center justify-center"
   style={{ background:'rgba(0,0,0,0.55)', backdropFilter:'blur(8px)', animation:'fadeIn 0.2s ease forwards', zIndex:9999, padding:'24px' }}>
   <div onClick={e => e.stopPropagation()} className="bg-white w-full flex flex-col"
-    style={{ borderRadius:16, maxWidth:520, maxHeight:'88vh', boxShadow:'0 24px 80px rgba(0,0,0,0.18)', animation:'modalIn 0.28s cubic-bezier(0.34,1.56,0.64,1) forwards' }}>
+  style={{ borderRadius:16, maxWidth:520, maxHeight:'88vh', boxShadow:'0 24px 80px rgba(0,0,0,0.18)', animation:'modalIn 0.28s cubic-bezier(0.34,1.56,0.64,1) forwards', touchAction:'pan-y' }}>
 
             <div className="flex items-center justify-between flex-shrink-0 px-6 py-4" style={{ borderBottom:'1px solid rgba(0,0,0,0.07)' }}>
               <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:'1rem', color:'#111' }}>New Member</div>
@@ -1853,7 +1853,7 @@ function AuthorsPanel({ members, userId, spotSlug, baseUrl, onReload }) {
         <div onClick={() => { setDetailMember(null); setDetailImgZoom(false); }} className="fixed inset-0 z-50 flex items-center justify-center p-8"
           style={{ background:'rgba(0,0,0,0.55)', backdropFilter:'blur(8px)', animation:'fadeIn 0.2s ease forwards', padding: '12px' }}>
           <div onClick={e => e.stopPropagation()} className="bg-white w-full flex flex-col overflow-hidden"
-            style={{ borderRadius:16, maxWidth:580, maxHeight:'90vh', boxShadow:'0 24px 80px rgba(0,0,0,0.18)', animation:'modalIn 0.28s cubic-bezier(0.34,1.56,0.64,1) forwards' }}>
+  style={{ borderRadius:16, maxWidth:520, maxHeight:'88vh', boxShadow:'0 24px 80px rgba(0,0,0,0.18)', animation:'modalIn 0.28s cubic-bezier(0.34,1.56,0.64,1) forwards', touchAction:'pan-y' }}>
 
             <div className="flex items-center justify-between flex-shrink-0 px-6 py-4" style={{ borderBottom:'1px solid rgba(0,0,0,0.07)' }}>
               <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:'1rem', color:'#111' }}>Member Profile</div>
