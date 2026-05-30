@@ -1916,7 +1916,9 @@ const uploadOverlayRef = useRef(null);
 useEffect(() => {
   const el = uploadOverlayRef.current;
   if (!el) return;
-  const prevent = (e) => e.preventDefault();
+  const prevent = (e) => {
+    if (!e.target.closest('[data-scrollable]')) e.preventDefault();
+  };
   el.addEventListener('touchmove', prevent, { passive: false });
   return () => el.removeEventListener('touchmove', prevent);
 }, [uploadModalOpen]);
@@ -2470,7 +2472,7 @@ useEffect(() => {
       </div>
 
       {/* Scrollable body */}
-      <div style={{ flex:1, overflowY:'auto', WebkitOverflowScrolling:'touch', padding:'14px 16px', display:'flex', flexDirection:'column', gap:14 }}>
+      <div data-scrollable style={{ flex:1, overflowY:'auto', WebkitOverflowScrolling:'touch', padding:'14px 16px', display:'flex', flexDirection:'column', gap:14 }}>
 
         {/* File grid — max 2 rows visible, scrollable */}
         {quickItems.length > 0 && (
