@@ -1669,17 +1669,17 @@ const swipeTabRef = useSwipeTabs(activeTab, setActiveTab);
   useEffect(() => {
     setLoading(true);
     Promise.all([API.get(`/media.php?slug=${slug}`), API.get(`/albums.php?slug=${slug}`)]).then(([mediaRes, albumsRes]) => {
-      const mediaItems = mediaRes.data.map(m => ({ ...m, _type: 'media' }));
-      const albumItems = albumsRes.data.map(a => ({ ...a, _type: 'album' }));
+      const mediaItems = Array.isArray(mediaRes.data) ? mediaRes.data.map(m => ({ ...m, _type: 'media' })) : [];
+      const albumItems = Array.isArray(albumsRes.data) ? albumsRes.data.map(a => ({ ...a, _type: 'album' })) : [];
       const merged = [...mediaItems, ...albumItems].sort((a, b) => new Date(b.uploaded_at || b.created_at) - new Date(a.uploaded_at || a.created_at));
-      setMedia(mediaRes.data);
-      setAlbums(albumsRes.data);
+      setMedia(Array.isArray(mediaRes.data) ? mediaRes.data : []);
+      setAlbums(Array.isArray(albumsRes.data) ? albumsRes.data : []);
       setFeed(merged);
     }).finally(() => setLoading(false));
 
     setExpLoading(true);
     API.get(`/experience.php?slug=${slug}`).then(r => { if (r.data?.content) setExperience(r.data.content); }).finally(() => setExpLoading(false));
-    API.get(`/members.php?slug=${slug}`).then(r => setMembers(r.data));
+    API.get(`/members.php?slug=${slug}`).then(r => setMembers(Array.isArray(r.data) ? r.data : []));
   }, [slug]);
 
   return (

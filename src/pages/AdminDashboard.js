@@ -2248,24 +2248,27 @@ useEffect(() => {
     );
   }
 
-  const loadMembers = () => {
-    API.get(`/members.php?slug=${user.assigned_spot}&uploader_id=${user.id}`).then(r => setMembers(r.data));
-  };
+const loadMembers = () => {
+  API.get(`/members.php?slug=${user.assigned_spot}&uploader_id=${user.id}`).then(r => {
+    setMembers(Array.isArray(r.data) ? r.data : []);
+  }).catch(() => setMembers([]));
+};
 
-  const loadRatings = () => {
-    API.get(`/ratings.php?slug=${user.assigned_spot}&user_id=0`).then(r => {
-      setRatings(r.data.ratings || []);
-      setRatingsSummary(r.data.summary || null);
-    });
-  };
+const loadRatings = () => {
+  API.get(`/ratings.php?slug=${user.assigned_spot}&user_id=0`).then(r => {
+    const data = r.data && typeof r.data === 'object' && !Array.isArray(r.data) ? r.data : {};
+    setRatings(Array.isArray(data.ratings) ? data.ratings : []);
+    setRatingsSummary(data.summary || null);
+  }).catch(() => { setRatings([]); setRatingsSummary(null); });
+};
 
   const loadMedia = () => {
     Promise.all([
       API.get(`/media.php?slug=${user.assigned_spot}`),
       API.get(`/albums.php?slug=${user.assigned_spot}&uploader_id=${user.id}`),
     ]).then(([mediaRes, albumsRes]) => {
-      const mediaItems = mediaRes.data.map(m => ({ ...m, _type:'media' }));
-      const albumItems = albumsRes.data.map(a => ({ ...a, _type:'album' }));
+      const mediaItems = Array.isArray(mediaRes.data) ? mediaRes.data.map(m => ({ ...m, _type:'media' })) : [];
+      const albumItems = Array.isArray(albumsRes.data) ? albumsRes.data.map(a => ({ ...a, _type:'album' })) : [];
       const merged = [...mediaItems, ...albumItems].sort((a, b) =>
         new Date(b.uploaded_at || b.created_at) - new Date(a.uploaded_at || a.created_at)
       );
@@ -2275,14 +2278,15 @@ useEffect(() => {
     });
   };
 
-  const loadExperience = async () => {
-    setExpLoading(true);
-    try {
-      const res = await API.get(`/experience.php?slug=${user.assigned_spot}&uploader_id=${user.id}`);
-      if (res.data.content) { setExperience(res.data.content); setExpLastSaved(res.data.updated_at || ''); }
-    } catch {}
-    finally { setExpLoading(false); }
-  };
+const loadExperience = async () => {
+  setExpLoading(true);
+  try {
+    const res = await API.get(`/experience.php?slug=${user.assigned_spot}&uploader_id=${user.id}`);
+    const data = res.data && typeof res.data === 'object' && !Array.isArray(res.data) ? res.data : {};
+    if (data.content) { setExperience(data.content); setExpLastSaved(data.updated_at || ''); }
+  } catch {}
+  finally { setExpLoading(false); }
+};
 
   const saveExperience = async () => {
     if (!experience.trim()) { setExpMsg('Please write something first.'); return; }
