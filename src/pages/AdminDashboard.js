@@ -760,9 +760,16 @@ function AdminCommentSection({ mediaId }) {
   const inputRef = React.useRef(null);
 
   React.useEffect(() => {
+    if (!open || loaded) return;
     API.get(`/comments.php?media_id=${mediaId}`)
-      .then(r => { setComments(r.data); setCount(r.data.length); setLoaded(true); });
-  }, [mediaId]);
+      .then(r => {
+        const data = Array.isArray(r.data) ? r.data : [];
+        setComments(data);
+        setCount(data.length);
+        setLoaded(true);
+      })
+      .catch(() => { setComments([]); setCount(0); setLoaded(true); });
+  }, [open, mediaId]);
 
   const previewComments = [...comments].slice(-3);
 
