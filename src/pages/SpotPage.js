@@ -1838,7 +1838,7 @@ const swipeTabRef = useSwipeTabs(activeTab, setActiveTab);
                     <div style={{ fontSize: '0.82rem', color: 'rgba(0,0,0,0.28)' }}>No members listed yet.</div>
                   </div>
                 )}
-                <div className="sp-members-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
+                <div className="sp-members-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 180px))', gap: 16 }}>
                   {members.map(m => <ViewerMemberCard key={m.id} m={m} baseUrl={BASE} />)}
                 </div>
               </div>

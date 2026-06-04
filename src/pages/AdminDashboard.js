@@ -1797,7 +1797,7 @@ function AuthorsPanel({ members, userId, spotSlug, baseUrl, onReload }) {
         </div>
       )}
 
-      <div className="ad-members-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(220px, 1fr))', gap:16 }}>
+      <div className="ad-members-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(200px, 200px))', gap:16 }}>
         {members.map(m => (
           <MemberCard key={m.id} m={m} baseUrl={baseUrl} userId={userId} spotSlug={spotSlug} onReload={onReload}
             onViewDetail={(member, base) => { setDetailMember(member); setDetailBase(base); }}
