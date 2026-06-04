@@ -46,6 +46,8 @@ const css = `
   @keyframes modalIn  { from{opacity:0;transform:scale(0.9) translateY(16px)} to{opacity:1;transform:scale(1) translateY(0)} }
   @keyframes scaleIn  { from{opacity:0;transform:scale(0.94)} to{opacity:1;transform:scale(1)} }
 
+  .sp-lightbox-img { max-width: 90vw; max-height: 80vh; object-fit: contain; border-radius: 8px; animation: modalIn 0.28s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+
   .cv-input {
     width: 100%; padding: 11px 14px;
     border: 1.5px solid rgba(0,0,0,0.12); border-radius: 8px;
