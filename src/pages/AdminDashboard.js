@@ -2396,7 +2396,7 @@ const loadExperience = async () => {
 
         {/* ── HEADER ── */}
         <div className="relative z-10" style={{ padding:'48px 0 44px', borderBottom:'1px solid rgba(255,255,255,0.08)', background:`linear-gradient(rgba(0,0,0,0.62), rgba(0,0,0,0.72)), url('/images/spots/${user.assigned_spot}.jpg') center/cover no-repeat` }}>
-          <div className="ad-header-inner mx-auto px-10" style={{ maxWidth:'1240px' }}>
+          <div className="ad-header-inner mx-auto px-10" style={{ maxWidth:'1200px' }}>
 
             <div className="flex items-center gap-3 mb-8" style={{ animation:'fadeUp 0.6s ease 0s forwards', opacity:0 }}>
               <span className="font-black uppercase tracking-widest" style={{ fontSize:'0.85rem', letterSpacing:'0.2em', color:'rgba(255,255,255,0.75)' }}>Admin</span>
@@ -2421,8 +2421,8 @@ const loadExperience = async () => {
         </div>
 
         {/* ── MAIN CONTENT ── */}
-        <div className="ad-content-wrap relative z-10 mx-auto px-10" style={{ maxWidth:'1240px', paddingTop:'36px', paddingBottom:'80px' }}>
-          <div className="ad-main-grid" style={{ display:'grid', gridTemplateColumns:'420px 1fr', gap:'28px', alignItems:'start' }}>
+        <div className="ad-content-wrap relative z-10 mx-auto px-10" style={{ maxWidth:'1200px', paddingTop:'36px', paddingBottom:'80px' }}>
+          <div className="ad-main-grid" style={{ display:'grid', gridTemplateColumns:'300px minmax(0,600px)', gap:'28px', alignItems:'start', justifyContent:'center' }}>
 
             {/* ── LEFT: DOCUMENTARY ── */}
             <div style={{ animation:'fadeUp 0.6s ease 0.2s forwards', opacity:0 }}>
